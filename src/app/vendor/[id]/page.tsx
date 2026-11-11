@@ -1,9 +1,23 @@
+import { Suspense } from "react";
 import { products, vendors } from "@/lib/data";
 import { notFound } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 
-export default function VendorPage({ params }: { params: { id: string } }) {
-  const vendor = vendors.find((v) => v.id === params.id);
+export function generateStaticParams() {
+  return vendors.map((vendor) => ({ id: vendor.id }));
+}
+
+export default function VendorPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-6 py-16 text-neutral-500">Loading...</div>}>
+      <VendorDetails params={params} />
+    </Suspense>
+  );
+}
+
+async function VendorDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const vendor = vendors.find((v) => v.id === id);
   if (!vendor) notFound();
 
   const vendorProducts = products.filter((p) => p.vendorId === vendor.id);

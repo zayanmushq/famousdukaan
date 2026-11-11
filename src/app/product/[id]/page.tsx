@@ -1,10 +1,24 @@
+import { Suspense } from "react";
 import { products, reviews, recommended } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const product = products.find((p) => p.id === params.id);
+export function generateStaticParams() {
+  return products.map((product) => ({ id: product.id }));
+}
+
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<div className="max-w-6xl mx-auto px-6 py-16 text-neutral-500">Loading...</div>}>
+      <ProductDetails params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = products.find((p) => p.id === id);
   if (!product) notFound();
 
   const productReviews = reviews[product.id as keyof typeof reviews] || [];
