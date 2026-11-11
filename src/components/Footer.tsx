@@ -29,7 +29,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-6 border-t border-neutral-100 text-xs text-neutral-400">
-          © {new Date().getFullYear()} FamousDukaan. All rights reserved. White-label ready.
+          © 2026 FamousDukaan. All rights reserved. White-label ready.
         </div>
       </div>
     </footer>
