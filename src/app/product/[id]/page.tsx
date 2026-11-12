@@ -154,7 +154,7 @@ async function ProductDetails({ params }: ProductPageProps) {
           <div className="mt-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm space-y-2">
             <div className="font-medium">Seller and statutory details</div>
             <p>Seller (store name): {bestOffer.vendor}</p>
-            <p>Seller legal name: {P.sellerLegalName}</p>
+            <p>Seller legal name: each seller&apos;s name is shown on the product page and invoice. This item is sold by {bestOffer.vendor}.</p>
             <p>Marketplace operator: {P.businessLegalName}</p>
             <p>Registered address: {P.registeredAddress}</p>
             <p>GSTIN: {P.gstin}</p>

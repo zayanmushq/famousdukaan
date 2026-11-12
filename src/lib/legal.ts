@@ -1,15 +1,16 @@
 export const LEGAL_DRAFT_NOTICE = "Draft — pending legal review";
 
 export const LEGAL_PLACEHOLDERS = {
-  businessLegalName: "[BUSINESS LEGAL NAME]",
-  registeredAddress: "[REGISTERED ADDRESS]",
+  businessLegalName: "Rimitana Global Networks Private Limited",
+  registeredAddress: "2nd Floor, 02-007, Emaar MGF The Palm Drive, Emaar Palm Square, Sector 66, Bhondsi, Gurugram, Haryana 122101, India",
   gstin: "[GSTIN]",
-  grievanceOfficerName: "[GRIEVANCE OFFICER NAME]",
-  grievanceOfficerEmail: "[GRIEVANCE OFFICER EMAIL]",
-  grievanceOfficerPhone: "[GRIEVANCE OFFICER PHONE]",
-  supportEmail: "[SUPPORT EMAIL]",
-  countryOfOrigin: "[COUNTRY OF ORIGIN]",
-  sellerLegalName: "[SELLER LEGAL NAME]",
+  grievanceOfficerName: "Hashim",
+  grievanceOfficerEmail: "rimitananetwork@gmail.com",
+  grievanceOfficerPhone: "+91 96904 79047",
+  supportEmail: "rimitananetwork@gmail.com",
+  countryOfOrigin: "India",
+  // Platform operator legal name. Individual vendor legal names are shown on the product/invoice, not this value.
+  sellerLegalName: "Rimitana Global Networks Private Limited",
 } as const;
 
 export const LEGAL_PAGES = [
