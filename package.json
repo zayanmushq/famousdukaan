@@ -8,11 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}\" DIRECT_URL=\"${DIRECT_URL:-${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}}\" prisma generate'",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "set-admin": "tsx scripts/set-admin.ts",
+    "test:auth": "tsx scripts/test-role-auth.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@supabase/supabase-js": "^2.119.0",
+    "bcryptjs": "^3.0.3",
     "next": "16.4.6",
     "next-auth": "^4.24.15",
     "prisma": "^6.19.3",
@@ -28,7 +31,8 @@
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@types/bcryptjs": "^2.4.6"
   },
   "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
   "main": "index.js",

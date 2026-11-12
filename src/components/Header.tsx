@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
   const [search, setSearch] = useState("");
   const [dark, setDark] = useState(false);
+  const { data: session, status } = useSession();
+  const role = session?.user?.role;
 
   useEffect(() => {
     if (dark) {
@@ -39,18 +42,27 @@ export default function Header() {
           <Link href="/plans" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
             Plans
           </Link>
-          <Link href="/wishlist" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-            Wishlist
-          </Link>
-          <Link href="/orders" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-            Orders
-          </Link>
-          <Link href="/account" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-            Account
-          </Link>
+          {session && (
+            <>
+              <Link href="/wishlist" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Wishlist
+              </Link>
+              <Link href="/orders" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Orders
+              </Link>
+              <Link href="/account" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Account
+              </Link>
+            </>
+          )}
           <Link href="/cart" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
             Cart
           </Link>
+          {(role === "VENDOR" || role === "ADMIN") && (
+            <Link href="/dashboard" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              Dashboard
+            </Link>
+          )}
           <button
             onClick={() => setDark(!dark)}
             className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -66,12 +78,27 @@ export default function Header() {
               </svg>
             )}
           </button>
-          <Link
-            href="/admin"
-            className="px-4 py-1.5 text-xs font-medium text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          >
-            Admin
-          </Link>
+          {status !== "loading" && !session && (
+            <Link href="/login" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              Login
+            </Link>
+          )}
+          {session && (
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            >
+              Logout
+            </button>
+          )}
+          {role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="px-4 py-1.5 text-xs font-medium text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-full hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
       </div>
     </header>

@@ -38,6 +38,7 @@ NEXTAUTH_URL=http://localhost:3000
 - `NEXT_PUBLIC_RAZORPAY_KEY_ID` (when payments go live)
 - `RAZORPAY_KEY_SECRET` (when payments go live)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (optional)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` only when running `npm run set-admin` locally or in a one-off secure environment; do not leave the password in Vercel env after setup
 
 Never commit `.env`, `.env.local`, or other secret files. `.gitignore` already ignores `.env*` except `.env.example`.
 

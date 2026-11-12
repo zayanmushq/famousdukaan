@@ -41,3 +41,9 @@ Do not add `USING (true)` policies "to make advisors green" unless you also inte
 ## Fallback
 
 Catalog pages and `GET /api/products` use Prisma first and fall back to `src/lib/data.ts` if `DATABASE_URL` is missing or a query fails. `/api/products` returns `{ source: "db" | "demo", products }` and an `X-Data-Source` header.
+
+## Authentication notes
+
+- User passwords are stored only as `passwordHash` (bcrypt, cost 12). Seeded demo users have no hash and cannot log in.
+- `LoginAttempt` records failed and successful credential logins for rate limiting (5 failures / 15 minutes per email+IP). It has RLS enabled with no policies, like the other public tables.
+- To create the first admin, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the environment (never in the repo) and run `npm run set-admin`. The script does not log those values.

@@ -1,62 +1,25 @@
-"use client";
+import { Suspense } from "react";
+import { requireRole } from "@/lib/auth-guard";
+import { prisma } from "@/lib/prisma";
+import DashboardClient from "./DashboardClient";
 
 export default function DashboardPage() {
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-light tracking-tight mb-2">Vendor Dashboard</h1>
-      <p className="text-neutral-500 mb-10">Atelier Noir · Store management</p>
+    <Suspense fallback={<div className="max-w-5xl mx-auto px-6 py-16 text-neutral-500">Loading dashboard...</div>}>
+      <DashboardLoader />
+    </Suspense>
+  );
+}
 
-      <div className="grid md:grid-cols-3 gap-6 mb-12">
-        <div className="p-6 border border-neutral-200 rounded-xl">
-          <div className="text-sm text-neutral-500">Total Sales</div>
-          <div className="mt-2 text-2xl font-light">$4,280</div>
-          <div className="text-xs text-green-600 mt-1">+12% this month</div>
-        </div>
-        <div className="p-6 border border-neutral-200 rounded-xl">
-          <div className="text-sm text-neutral-500">Your Earnings</div>
-          <div className="mt-2 text-2xl font-light">$3,852</div>
-          <div className="text-xs text-neutral-500 mt-1">After 10% commission</div>
-        </div>
-        <div className="p-6 border border-neutral-200 rounded-xl">
-          <div className="text-sm text-neutral-500">Pending Payout</div>
-          <div className="mt-2 text-2xl font-light">$1,240</div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="border border-neutral-200 rounded-xl p-6">
-          <h3 className="font-medium mb-4">Recent Orders</h3>
-          <div className="space-y-4 text-sm">
-            <div className="flex justify-between">
-              <span>#AET-1024 · Minimal Leather Tote</span>
-              <span className="text-neutral-500">Processing</span>
-            </div>
-            <div className="flex justify-between">
-              <span>#AET-1021 · Merino Wool Scarf</span>
-              <span className="text-neutral-500">Shipped</span>
-            </div>
-            <div className="flex justify-between">
-              <span>#AET-1018 · Leather Wallet</span>
-              <span className="text-green-600">Delivered</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-neutral-200 rounded-xl p-6">
-          <h3 className="font-medium mb-4">Quick Actions</h3>
-          <div className="space-y-3">
-            <button className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 text-sm">
-              + Add New Product
-            </button>
-            <button className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 text-sm">
-              Manage Inventory
-            </button>
-            <button className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 text-sm">
-              Request Payout
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+async function DashboardLoader() {
+  const session = await requireRole(["VENDOR", "ADMIN"], "/dashboard");
+  const vendor = session.user.vendorId
+    ? await prisma.vendor.findUnique({ where: { id: session.user.vendorId } })
+    : null;
+  return (
+    <DashboardClient
+      storeName={vendor?.storeName || session.user.name}
+      vendorStatus={session.user.vendorStatus}
+    />
   );
 }

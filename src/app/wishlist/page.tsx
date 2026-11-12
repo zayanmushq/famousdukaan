@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getProducts } from "@/lib/catalog";
+import { requireAuth } from "@/lib/auth-guard";
 import WishlistClient from "./WishlistClient";
 
 export default function WishlistPage() {
@@ -11,6 +12,7 @@ export default function WishlistPage() {
 }
 
 async function WishlistLoader() {
+  await requireAuth("/wishlist");
   const { products } = await getProducts();
   return <WishlistClient products={products} />;
 }

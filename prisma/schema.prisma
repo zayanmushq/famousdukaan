@@ -12,7 +12,7 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
-  password      String?
+  passwordHash  String?
   role          Role      @default(CUSTOMER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -143,4 +143,13 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   RETURNED
+}
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, ip, createdAt])
 }

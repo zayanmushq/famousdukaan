@@ -1,20 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/account";
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    // Demo login - stores user in localStorage
-    if (email && password) {
-      localStorage.setItem("user", JSON.stringify({ email, name: email.split("@")[0] }));
-      router.push("/account");
+    setError("");
+    setPending(true);
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl,
+    });
+    setPending(false);
+    if (result?.error) {
+      setError(result.error === "TOO_MANY_ATTEMPTS"
+        ? "Too many attempts. Please try again in 15 minutes."
+        : "Invalid email or password.");
+      return;
     }
+    router.push(callbackUrl);
+    router.refresh();
   };
 
   return (
@@ -39,8 +57,9 @@ export default function LoginPage() {
           className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm"
           required
         />
-        <button type="submit" className="w-full py-3 bg-neutral-900 text-white text-sm rounded-full">
-          Login
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button type="submit" disabled={pending} className="w-full py-3 bg-neutral-900 text-white text-sm rounded-full disabled:opacity-60">
+          {pending ? "Signing in..." : "Login"}
         </button>
       </form>
 
@@ -48,5 +67,13 @@ export default function LoginPage() {
         Don't have an account? <a href="/register" className="underline">Sign up</a>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto px-6 py-20 text-neutral-500">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
