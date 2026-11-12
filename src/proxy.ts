@@ -1,5 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { SITE_URL } from "@/lib/seo";
+
+const PRODUCTION_VERCEL_HOST = "famousdukaan.vercel.app";
+
+function redirectVercelAppAlias(request: NextRequest) {
+  const host = request.headers.get("host")?.split(":")[0]?.toLowerCase();
+  if (host !== PRODUCTION_VERCEL_HOST) return null;
+  const destination = new URL(request.nextUrl.pathname + request.nextUrl.search, SITE_URL);
+  return NextResponse.redirect(destination, 308);
+}
 
 const customerPrefixes = ["/account", "/orders", "/wishlist", "/checkout"];
 const vendorPrefixes = ["/dashboard"];
@@ -10,17 +20,27 @@ function startsWithAny(pathname: string, prefixes: string[]) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  const isLoggedIn = Boolean(token?.id || token?.email);
-  const role = token?.role;
+  const aliasRedirect = redirectVercelAppAlias(request);
+  if (aliasRedirect) return aliasRedirect;
 
+  const { pathname } = request.nextUrl;
   const isOrdersApi = pathname === "/api/orders" || pathname.startsWith("/api/orders/");
   const isProductsWrite =
     (pathname === "/api/products" || pathname.startsWith("/api/products/")) &&
     request.method !== "GET" &&
     request.method !== "HEAD" &&
     request.method !== "OPTIONS";
+  const isAdminApi = pathname === "/api/admin" || pathname.startsWith("/api/admin/");
+  const isVendorApi = pathname === "/api/vendor" || pathname.startsWith("/api/vendor/");
+  const needsLogin = startsWithAny(pathname, [...customerPrefixes, ...vendorPrefixes, ...adminPrefixes]);
+
+  if (!isOrdersApi && !isProductsWrite && !isAdminApi && !isVendorApi && !needsLogin) {
+    return NextResponse.next();
+  }
+
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const isLoggedIn = Boolean(token?.id || token?.email);
+  const role = token?.role;
 
   if (isOrdersApi) {
     if (!isLoggedIn) {
@@ -39,7 +59,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isAdminApi = pathname === "/api/admin" || pathname.startsWith("/api/admin/");
   if (isAdminApi) {
     if (!isLoggedIn) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,7 +69,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isVendorApi = pathname === "/api/vendor" || pathname.startsWith("/api/vendor/");
   if (isVendorApi) {
     if (!isLoggedIn) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,7 +79,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const needsLogin = startsWithAny(pathname, [...customerPrefixes, ...vendorPrefixes, ...adminPrefixes]);
   if (needsLogin && !isLoggedIn) {
     const login = new URL("/login", request.url);
     login.searchParams.set("callbackUrl", pathname);
@@ -81,25 +98,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/account",
-    "/account/:path*",
-    "/orders",
-    "/orders/:path*",
-    "/wishlist",
-    "/wishlist/:path*",
-    "/checkout",
-    "/checkout/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/admin",
-    "/admin/:path*",
-    "/api/orders",
-    "/api/orders/:path*",
-    "/api/products",
-    "/api/products/:path*",
-    "/api/admin",
-    "/api/admin/:path*",
-    "/api/vendor",
-    "/api/vendor/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:ico|png|jpg|jpeg|svg|webp)$).*)",
   ],
 };

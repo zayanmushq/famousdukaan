@@ -1,11 +1,49 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { getProductById } from "@/lib/catalog";
 import AddToCartButton from "@/components/AddToCartButton";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, productJsonLd, SITE_NAME, SITE_URL } from "@/lib/seo";
 
-export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+type ProductPageProps = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const result = await getProductById(id);
+  if (!result) {
+    return { title: "Product not found", robots: { index: false, follow: false } };
+  }
+
+  const { product } = result;
+  const description = `A carefully considered piece from ${product.vendor}. Designed for everyday elegance with exceptional materials and craftsmanship.`;
+  const url = `${SITE_URL}/product/${product.id}`;
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: product.name,
+      description,
+      url,
+      siteName: SITE_NAME,
+      locale: "en_IN",
+      type: "website",
+      images: product.image ? [{ url: product.image, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: product.image ? [product.image] : undefined,
+    },
+  };
+}
+
+export default function ProductPage({ params }: ProductPageProps) {
   return (
     <Suspense fallback={<div className="max-w-6xl mx-auto px-6 py-16 text-neutral-500">Loading...</div>}>
       <ProductDetails params={params} />
@@ -13,7 +51,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   );
 }
 
-async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
+async function ProductDetails({ params }: ProductPageProps) {
   const { id } = await params;
   const result = await getProductById(id);
   if (!result) notFound();
@@ -23,6 +61,14 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
+      <JsonLd data={productJsonLd(product)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Shop", path: "/products" },
+          { name: product.name, path: `/product/${product.id}` },
+        ])}
+      />
       <div className="grid md:grid-cols-2 gap-12 lg:gap-20">
         <div className="aspect-square bg-neutral-50 dark:bg-neutral-900 rounded-2xl overflow-hidden">
           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />

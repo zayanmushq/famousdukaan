@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { FormEvent, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
@@ -9,6 +10,13 @@ export default function Header() {
   const [dark, setDark] = useState(false);
   const { data: session, status } = useSession();
   const role = session?.user?.role;
+  const router = useRouter();
+
+  const handleSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const query = search.trim();
+    router.push(query ? `/products?q=${encodeURIComponent(query)}` : "/products");
+  };
 
   useEffect(() => {
     if (dark) {
@@ -25,15 +33,26 @@ export default function Header() {
           FamousDukaan
         </Link>
 
-        <div className="hidden md:flex flex-1 max-w-sm mx-12">
+        <form
+          role="search"
+          action="/products"
+          method="get"
+          onSubmit={handleSearch}
+          className="hidden md:flex flex-1 max-w-sm mx-12"
+        >
+          <label className="sr-only" htmlFor="site-search">
+            Search products
+          </label>
           <input
-            type="text"
+            id="site-search"
+            type="search"
+            name="q"
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-4 py-2 text-sm bg-neutral-50 dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors text-neutral-900 dark:text-neutral-100"
           />
-        </div>
+        </form>
 
         <nav className="flex items-center gap-6 text-sm text-neutral-600 dark:text-neutral-400">
           <Link href="/products" className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">

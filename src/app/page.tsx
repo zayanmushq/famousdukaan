@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/lib/catalog";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: { absolute: "FamousDukaan — Premium Multivendor Marketplace" },
+  description: "India's modern multivendor marketplace. Simple, minimalist, premium shopping from independent vendors.",
+  alternates: { canonical: "/" },
+};
+
 
 export default function Home() {
   return (
@@ -11,7 +19,7 @@ export default function Home() {
           Every shop, famous shop.
         </h1>
         <p className="mt-8 text-lg text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
-          India's modern multivendor marketplace.
+          India&apos;s modern multivendor marketplace.
         </p>
         <div className="mt-12">
           <Link

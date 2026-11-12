@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import type { CatalogProduct } from "@/lib/catalog";
 
@@ -12,12 +13,32 @@ const sortOptions = [
   { id: "newest", label: "Newest" },
 ];
 
-export default function ProductsBrowser({ products }: { products: CatalogProduct[] }) {
+export default function ProductsBrowser({
+  products,
+  initialQuery = "",
+}: {
+  products: CatalogProduct[];
+  initialQuery?: string;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
-  const [search, setSearch] = useState("");
+  const queryFromUrl = searchParams.get("q") ?? initialQuery;
+  const [search, setSearch] = useState(queryFromUrl);
   const [category, setCategory] = useState("All");
   const [maxPrice, setMaxPrice] = useState(1000);
   const [sort, setSort] = useState("featured");
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    const params = new URLSearchParams(searchParams.toString());
+    const trimmed = value.trim();
+    if (trimmed) params.set("q", trimmed);
+    else params.delete("q");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
@@ -57,7 +78,7 @@ export default function ProductsBrowser({ products }: { products: CatalogProduct
           type="text"
           placeholder="Search products or vendors..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => updateSearch(e.target.value)}
           className="flex-1 max-w-md px-4 py-2.5 text-sm border border-neutral-200 rounded-full focus:outline-none focus:border-neutral-400"
         />
         <div className="flex gap-2 flex-wrap">
