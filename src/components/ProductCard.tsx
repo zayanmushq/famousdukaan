@@ -1,5 +1,6 @@
 import Link from "next/link";
 import RatingSummary from "@/components/RatingSummary";
+import { formatInr } from "@/lib/money";
 
 interface Product {
   id: string;
@@ -25,7 +26,7 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="mt-4">
         <div className="text-xs tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">{product.vendor}</div>
         <div className="mt-1.5 text-sm font-medium text-neutral-900 dark:text-neutral-100">{product.name}</div>
-        <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">${product.price}</div>
+        <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{formatInr(product.price)}</div>
         <RatingSummary rating={product.rating ?? 0} count={product.reviews ?? 0} className="mt-1 text-xs text-neutral-500" />
         {(product.stock ?? 1) <= 0 && (
           <div className="mt-1 text-xs text-red-700">Out of stock</div>

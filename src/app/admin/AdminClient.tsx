@@ -317,11 +317,11 @@ export default function AdminClient({
         <div className="grid md:grid-cols-4 gap-6">
           <div className="p-6 border border-neutral-200 rounded-xl">
             <div className="text-sm text-neutral-500">Total GMV</div>
-            <div className="mt-2 text-2xl font-light">$128,450</div>
+            <div className="mt-2 text-2xl font-light">{formatInr(128450)}</div>
           </div>
           <div className="p-6 border border-neutral-200 rounded-xl">
             <div className="text-sm text-neutral-500">Platform Commission</div>
-            <div className="mt-2 text-2xl font-light">$12,845</div>
+            <div className="mt-2 text-2xl font-light">{formatInr(12845)}</div>
           </div>
           <div className="p-6 border border-neutral-200 rounded-xl">
             <div className="text-sm text-neutral-500">Active Vendors</div>
@@ -352,8 +352,8 @@ export default function AdminClient({
                 <tr key={v.id} className="border-t border-neutral-100">
                   <td className="p-4 font-medium">{v.name}</td>
                   <td className="p-4">{v.products}</td>
-                  <td className="p-4">${v.sales.toLocaleString()}</td>
-                  <td className="p-4">${v.commission.toLocaleString()}</td>
+                  <td className="p-4">{formatInr(v.sales)}</td>
+                  <td className="p-4">{formatInr(v.commission)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-xs rounded-full ${v.status === "Active" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
                       {v.status}

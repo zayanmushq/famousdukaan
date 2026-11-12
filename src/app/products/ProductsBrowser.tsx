@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import type { CatalogProduct } from "@/lib/catalog";
+import { formatInr } from "@/lib/money";
 
 const sortOptions = [
   { id: "featured", label: "Featured" },
@@ -27,7 +28,10 @@ export default function ProductsBrowser({
   const queryFromUrl = searchParams.get("q") ?? initialQuery;
   const [search, setSearch] = useState(queryFromUrl);
   const [category, setCategory] = useState("All");
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const catalogPrices = products.map((product) => product.price);
+  const catalogMax = catalogPrices.length ? Math.max(...catalogPrices) : 0;
+  const catalogMin = catalogPrices.length ? Math.min(...catalogPrices) : 0;
+  const [maxPrice, setMaxPrice] = useState(catalogMax);
   const [sort, setSort] = useState("featured");
 
   const updateSearch = (value: string) => {
@@ -97,11 +101,12 @@ export default function ProductsBrowser({
           ))}
         </div>
         <div className="flex items-center gap-3 text-sm text-neutral-600">
-          <span>Under ${maxPrice}</span>
+          <span>Under {formatInr(maxPrice)}</span>
           <input
             type="range"
-            min="50"
-            max="1000"
+            min={Math.max(0, Math.floor(catalogMin))}
+            max={Math.max(catalogMax, 1)}
+            step="1"
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
             className="w-32"

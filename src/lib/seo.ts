@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CatalogProduct, CatalogVendor } from "@/lib/catalog";
+import { DISPLAY_CURRENCY } from "@/lib/money";
 
 export const SITE_URL = "https://famousdukaan.com";
 export const SITE_NAME = "FamousDukaan";
@@ -57,7 +58,7 @@ export function productJsonLd(product: CatalogProduct, reviews: { name: string; 
     "@type": "Offer",
     url,
     price: offer.price,
-    priceCurrency: "USD",
+    priceCurrency: DISPLAY_CURRENCY,
     availability:
       (product.stock ?? 1) > 0
         ? "https://schema.org/InStock"

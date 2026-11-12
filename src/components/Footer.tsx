@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEGAL_PAGES } from "@/lib/legal";
 
 export default function Footer() {
   return (
@@ -22,7 +23,6 @@ export default function Footer() {
                     Shop
                   </Link>
                 </div>
-                <div>Vendors</div>
                 <div>
                   <Link href="/plans" className="hover:text-neutral-900 transition-colors">
                     Become a Seller
@@ -33,9 +33,13 @@ export default function Footer() {
             <div>
               <div className="font-medium mb-3">Company</div>
               <div className="space-y-2 text-neutral-500">
-                <div>About</div>
-                <div>Contact</div>
-                <div>Privacy</div>
+                {LEGAL_PAGES.map((page) => (
+                  <div key={page.href}>
+                    <Link href={page.href} className="hover:text-neutral-900 transition-colors">
+                      {page.label}
+                    </Link>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

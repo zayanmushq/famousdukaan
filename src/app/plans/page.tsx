@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatInr } from "@/lib/money";
 
 const plans = [
   { id: "free", name: "Free", price: 0, commission: 15, products: 10, features: ["Basic store", "COD support"] },
@@ -29,7 +30,7 @@ export default function VendorPlansPage() {
           >
             <div className="text-lg font-medium">{plan.name}</div>
             <div className="mt-2 text-3xl font-light">
-              {plan.price === 0 ? "Free" : `₹${plan.price}`}
+              {plan.price === 0 ? "Free" : formatInr(plan.price)}
               {plan.price > 0 && <span className="text-sm text-neutral-500">/mo</span>}
             </div>
             <div className="mt-4 text-sm text-neutral-500">{plan.commission}% commission</div>

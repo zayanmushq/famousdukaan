@@ -10,6 +10,8 @@ import RatingSummary from "@/components/RatingSummary";
 import ReviewForm from "@/components/ReviewForm";
 import { getAuthSession } from "@/lib/auth-guard";
 import { getReviewEligibility } from "@/lib/reviews";
+import { formatInr, DISPLAY_CURRENCY } from "@/lib/money";
+import { LEGAL_PLACEHOLDERS as P } from "@/lib/legal";
 import { breadcrumbJsonLd, productJsonLd, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 type ProductPageProps = { params: Promise<{ id: string }> };
@@ -43,6 +45,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       title: product.name,
       description,
       images: product.image ? [product.image] : undefined,
+    },
+    other: {
+      "product:price:amount": String(product.price),
+      "product:price:currency": DISPLAY_CURRENCY,
     },
   };
 }
@@ -85,7 +91,7 @@ async function ProductDetails({ params }: ProductPageProps) {
           <h1 className="mt-3 text-3xl md:text-4xl font-light tracking-tight">{product.name}</h1>
 
           <div className="mt-4 flex items-center gap-3 flex-wrap">
-            <div className="text-2xl">${bestOffer.price}</div>
+            <div className="text-2xl">{formatInr(bestOffer.price)}</div>
             {(product.stock ?? 0) <= 0 ? (
               <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">Out of stock</span>
             ) : product.stock <= 5 ? (
@@ -101,7 +107,7 @@ async function ProductDetails({ params }: ProductPageProps) {
           <div className="mt-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl text-sm">
             <div className="font-medium mb-2">EMI Options</div>
             <div className="text-neutral-600 dark:text-neutral-400">
-              No Cost EMI from ₹{(bestOffer.price / 6).toFixed(0)}/month · 3, 6, 9, 12 months
+              No Cost EMI from {formatInr(bestOffer.price / 6)}/month · 3, 6, 9, 12 months
             </div>
           </div>
 
@@ -119,7 +125,7 @@ async function ProductDetails({ params }: ProductPageProps) {
                       <div className="font-medium">{offer.vendor}</div>
                       <div className="text-xs text-neutral-500">★ {offer.rating} · {offer.delivery}</div>
                     </div>
-                    <div className="font-medium">${offer.price}</div>
+                    <div className="font-medium">{formatInr(offer.price)}</div>
                   </div>
                 ))}
               </div>
@@ -143,6 +149,24 @@ async function ProductDetails({ params }: ProductPageProps) {
 
           <div className="mt-6 text-sm text-neutral-500">
             Sold by <Link href={`/vendor/${product.vendorId}`} className="underline">{bestOffer.vendor}</Link> · Ships in {bestOffer.delivery}
+          </div>
+
+          <div className="mt-8 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm space-y-2">
+            <div className="font-medium">Seller and statutory details</div>
+            <p>Seller (store name): {bestOffer.vendor}</p>
+            <p>Seller legal name: {P.sellerLegalName}</p>
+            <p>Marketplace operator: {P.businessLegalName}</p>
+            <p>Registered address: {P.registeredAddress}</p>
+            <p>GSTIN: {P.gstin}</p>
+            <p>Country of origin: {P.countryOfOrigin}</p>
+            <p>
+              Returns and refunds: see our <Link href="/refund-policy" className="underline">Refund Policy</Link>.
+              Shipping: see our <Link href="/shipping-policy" className="underline">Shipping Policy</Link>.
+            </p>
+            <p>
+              Grievance officer: {P.grievanceOfficerName}, {P.grievanceOfficerEmail}, {P.grievanceOfficerPhone}.{" "}
+              <Link href="/grievance" className="underline">Grievance process</Link>
+            </p>
           </div>
         </div>
       </div>

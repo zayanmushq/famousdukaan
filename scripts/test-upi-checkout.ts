@@ -46,6 +46,8 @@ function storeCookies(jar: CookieJar, res: Response) {
 }
 
 async function request(path: string, init: RequestInit & { jar?: CookieJar; redirect?: RequestRedirect } = {}) {
+  // Release this process's Prisma connection so the Next.js server (pool size 1) can transact.
+  await prisma.$disconnect();
   const jar = init.jar ?? new Map();
   const headers = new Headers(init.headers);
   if (jar.size) headers.set("cookie", cookieHeader(jar));
