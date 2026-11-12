@@ -23,7 +23,23 @@ const reviewAuthors: Record<string, { id: string; email: string; name: string }>
   "Sofia L.": { id: "u-sofia", email: "sofia@famousdukaan.demo", name: "Sofia L." },
 };
 
+const demoCategories = [
+  { id: "cat-bags", slug: "bags", name: "Bags" },
+  { id: "cat-home", slug: "home", name: "Home" },
+  { id: "cat-apparel", slug: "apparel", name: "Apparel" },
+  { id: "cat-lighting", slug: "lighting", name: "Lighting" },
+  { id: "cat-accessories", slug: "accessories", name: "Accessories" },
+];
+
 async function main() {
+  for (const category of demoCategories) {
+    await prisma.category.upsert({
+      where: { slug: category.slug },
+      update: { name: category.name },
+      create: category,
+    });
+  }
+
   const customerIds = Object.values(reviewAuthors);
   for (const user of customerIds) {
     await prisma.user.upsert({

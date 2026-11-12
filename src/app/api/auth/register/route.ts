@@ -3,14 +3,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { normalizeEmail } from "@/lib/request-ip";
 
-function slugify(value: string) {
-  const slug = value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return slug || "store";
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -18,7 +10,6 @@ export async function POST(request: Request) {
     const email = normalizeEmail(String(body.email || ""));
     const password = String(body.password || "");
     const sell = Boolean(body.sell);
-    const storeName = String(body.storeName || name || "My Store").trim();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
@@ -43,29 +34,16 @@ export async function POST(request: Request) {
           name,
           email,
           passwordHash,
-          role: sell ? "VENDOR" : "CUSTOMER",
+          role: "CUSTOMER",
         },
       });
-
-      if (sell) {
-        let slug = slugify(storeName);
-        const clash = await tx.vendor.findUnique({ where: { slug } });
-        if (clash) slug = `${slug}-${created.id.slice(-6).toLowerCase()}`;
-        await tx.vendor.create({
-          data: {
-            userId: created.id,
-            storeName,
-            slug,
-            status: "PENDING",
-          },
-        });
-      }
 
       return created;
     });
 
     return NextResponse.json({
       success: true,
+      next: sell ? "/sell" : "/account",
       user: { id: user.id, email: user.email, role: user.role },
     });
   } catch {

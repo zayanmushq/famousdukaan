@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { requireRole } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { expireUnpaidOrdersSafe } from "@/lib/inventory";
-import AdminClient, { type AdminOrder, type AdminPayment, type AdminReview } from "./AdminClient";
+import AdminClient, { type AdminOrder, type AdminPayment, type AdminReview, type AdminVendor } from "./AdminClient";
 
 export default function AdminPage() {
   return (
@@ -15,7 +15,7 @@ export default function AdminPage() {
 async function AdminLoader() {
   await requireRole(["ADMIN"], "/admin");
   await expireUnpaidOrdersSafe();
-  const [paymentRows, orderRows, reviewRows] = await Promise.all([
+  const [paymentRows, orderRows, reviewRows, vendorRows] = await Promise.all([
     prisma.order.findMany({
       where: { paymentStatus: { in: ["PENDING", "SUBMITTED"] } },
       include: { user: { select: { email: true, name: true } } },
@@ -36,6 +36,14 @@ async function AdminLoader() {
       },
       orderBy: { createdAt: "desc" },
       take: 200,
+    }),
+    prisma.vendor.findMany({
+      include: {
+        user: { select: { id: true, email: true, name: true, role: true } },
+        reviewedBy: { select: { id: true, email: true, name: true } },
+        _count: { select: { products: true } },
+      },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
   const payments: AdminPayment[] = paymentRows.map((row) => ({
@@ -78,5 +86,27 @@ async function AdminLoader() {
     customerName: row.user.name,
     customerEmail: row.user.email,
   }));
-  return <AdminClient payments={payments} orders={orders} reviews={reviews} />;
+  const vendors: AdminVendor[] = vendorRows.map((row) => ({
+    id: row.id,
+    storeName: row.storeName,
+    slug: row.slug,
+    description: row.description,
+    contactPhone: row.contactPhone,
+    pickupCity: row.pickupCity,
+    pickupState: row.pickupState,
+    pickupPincode: row.pickupPincode,
+    pan: row.pan,
+    gstin: row.gstin,
+    bankAccountHolder: row.bankAccountHolder,
+    bankIfsc: row.bankIfsc,
+    bankAccountMasked: row.bankAccountLast4 ? `XXXXXX${row.bankAccountLast4}` : null,
+    status: row.status,
+    statusReason: row.statusReason,
+    reviewedAt: row.reviewedAt,
+    reviewedBy: row.reviewedBy,
+    createdAt: row.createdAt,
+    user: row.user,
+    productCount: row._count.products,
+  }));
+  return <AdminClient payments={payments} orders={orders} reviews={reviews} vendors={vendors} />;
 }

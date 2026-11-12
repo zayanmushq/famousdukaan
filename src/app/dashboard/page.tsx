@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { requireRole } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { expireUnpaidOrdersSafe } from "@/lib/inventory";
-import DashboardClient, { type DashboardFulfillment, type DashboardProduct } from "./DashboardClient";
+import DashboardClient, { type DashboardCategory, type DashboardFulfillment, type DashboardProduct } from "./DashboardClient";
 
 export default function DashboardPage() {
   return (
@@ -20,13 +20,31 @@ async function DashboardLoader() {
     : null;
 
   const vendorId = session.user.vendorId;
-  const products: DashboardProduct[] = vendorId
-    ? (await prisma.product.findMany({
-        where: { vendorId },
-        orderBy: { createdAt: "asc" },
-        select: { id: true, name: true, sku: true, stock: true, lowStockThreshold: true, price: true, status: true, images: true },
-      }))
-    : [];
+  const [productRows, categoryRows] = await Promise.all([
+    vendorId
+      ? prisma.product.findMany({
+          where: { vendorId },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            category: true,
+            sku: true,
+            stock: true,
+            lowStockThreshold: true,
+            price: true,
+            comparePrice: true,
+            status: true,
+            images: true,
+            countryOfOrigin: true,
+          },
+        })
+      : Promise.resolve([]),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+  ]);
+  const products: DashboardProduct[] = productRows;
+  const categories: DashboardCategory[] = categoryRows;
 
   const fulfillmentRows = vendorId
     ? await prisma.orderFulfillment.findMany({
@@ -66,6 +84,7 @@ async function DashboardLoader() {
       vendorStatus={session.user.vendorStatus ?? (session.user.role === "ADMIN" ? "APPROVED" : null)}
       products={products}
       fulfillments={fulfillments}
+      categories={categories}
     />
   );
 }

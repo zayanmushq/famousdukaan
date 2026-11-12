@@ -158,7 +158,7 @@ async function ProductDetails({ params }: ProductPageProps) {
             <p>Marketplace operator: {P.businessLegalName}</p>
             <p>Registered address: {P.registeredAddress}</p>
             <p>GSTIN: {P.gstin}</p>
-            <p>Country of origin: {P.countryOfOrigin}</p>
+            <p>Country of origin: {product.countryOfOrigin || P.countryOfOrigin}</p>
             <p>
               Returns and refunds: see our <Link href="/refund-policy" className="underline">Refund Policy</Link>.
               Shipping: see our <Link href="/shipping-policy" className="underline">Shipping Policy</Link>.

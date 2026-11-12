@@ -8,10 +8,15 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { expireUnpaidOrdersSafe } from "@/lib/inventory";
 
-export type CatalogProduct = (typeof demoProducts)[number];
+export type CatalogProduct = (typeof demoProducts)[number] & { countryOfOrigin?: string | null };
 export type CatalogVendor = (typeof demoVendors)[number];
 export type CatalogReview = { name: string; rating: number; comment: string };
 export type CatalogSource = "db" | "demo";
+
+const PUBLIC_PRODUCT_WHERE = {
+  status: { in: ["ACTIVE", "OUT_OF_STOCK"] as ("ACTIVE" | "OUT_OF_STOCK")[] },
+  vendor: { status: "APPROVED" as const },
+};
 
 type ProductRow = {
   id: string;
@@ -24,7 +29,9 @@ type ProductRow = {
   reviewCount: number;
   fastDelivery: boolean;
   vendorId: string;
-  vendor: { id: string; storeName: string; rating: number };
+  status: string;
+  countryOfOrigin?: string | null;
+  vendor: { id: string; storeName: string; rating: number; status: string };
 };
 
 type VendorRow = {
@@ -32,6 +39,7 @@ type VendorRow = {
   storeName: string;
   description: string | null;
   rating: number;
+  status: string;
   _count: { products: number };
 };
 
@@ -56,6 +64,7 @@ function mapProduct(row: ProductRow): CatalogProduct {
     rating: row.rating,
     reviews: row.reviewCount,
     fastDelivery: row.fastDelivery,
+    countryOfOrigin: row.countryOfOrigin ?? null,
     offers: [offer],
   };
 }
@@ -83,7 +92,7 @@ export const getProducts = cache(async function getProducts(): Promise<{ source:
     await expireUnpaidOrdersSafe();
     const rows = await fromDb(() =>
       prisma.product.findMany({
-        where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
+        where: PUBLIC_PRODUCT_WHERE,
         include: { vendor: true },
         orderBy: { createdAt: "asc" },
       })
@@ -100,7 +109,8 @@ export const getVendors = cache(async function getVendors(): Promise<{ source: C
   try {
     const rows = await fromDb(() =>
       prisma.vendor.findMany({
-        include: { _count: { select: { products: true } } },
+        where: { status: "APPROVED" },
+        include: { _count: { select: { products: { where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } } } } } },
         orderBy: { createdAt: "asc" },
       })
     );
@@ -130,6 +140,8 @@ export const getProductById = cache(async function getProductById(id: string): P
       })
     );
     if (!row) return null;
+    if (row.status !== "ACTIVE" && row.status !== "OUT_OF_STOCK") return null;
+    if (row.vendor.status !== "APPROVED") return null;
 
     const { products } = await getProducts();
     const recommended = products.filter((p) => demoRecommended.includes(p.id) && p.id !== id);
@@ -169,7 +181,7 @@ export const getVendorById = cache(async function getVendorById(id: string): Pro
         include: { _count: { select: { products: true } } },
       })
     );
-    if (!row) return null;
+    if (!row || row.status !== "APPROVED") return null;
     const { products } = await getProducts();
     return {
       source: "db",

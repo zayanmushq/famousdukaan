@@ -67,6 +67,7 @@ export async function reserveStock(
       "updatedAt" = NOW()
     WHERE id = ${input.productId}
       AND stock >= ${qty}
+      AND status IN ('ACTIVE'::"ProductStatus", 'OUT_OF_STOCK'::"ProductStatus")
   `;
   if (updated !== 1) {
     throw new OutOfStockError();
@@ -150,8 +151,14 @@ export async function adjustStock(
     select: { stock: true, status: true },
   });
   const delta = next - current.stock;
-  const status =
-    next <= 0 ? "OUT_OF_STOCK" : current.status === "OUT_OF_STOCK" ? "ACTIVE" : current.status;
+  const frozen = current.status === "DRAFT" || current.status === "ARCHIVED";
+  const status = frozen
+    ? current.status
+    : next <= 0
+      ? "OUT_OF_STOCK"
+      : current.status === "OUT_OF_STOCK"
+        ? "ACTIVE"
+        : current.status;
   const product = await tx.product.update({
     where: { id: input.productId },
     data: { stock: next, status },

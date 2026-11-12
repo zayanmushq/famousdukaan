@@ -89,7 +89,7 @@ function randomUtr() {
 }
 
 const emails = Object.values(users).map((u) => u.email);
-let stockSnapshot: { id: string; stock: number; status: "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" }[] = [];
+let stockSnapshot: { id: string; stock: number; status: "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" | "ARCHIVED" }[] = [];
 
 async function snapshotStock() {
   stockSnapshot = await prisma.product.findMany({ select: { id: true, stock: true, status: true } });

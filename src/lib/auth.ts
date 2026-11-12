@@ -74,6 +74,21 @@ export const authOptions: NextAuthOptions = {
         token.vendorId = user.vendorId ?? null;
         token.vendorStatus = user.vendorStatus ?? null;
       }
+      if (token.id) {
+        try {
+          const fresh = await prisma.user.findUnique({
+            where: { id: String(token.id) },
+            include: { vendor: { select: { id: true, status: true } } },
+          });
+          if (fresh) {
+            token.role = fresh.role;
+            token.vendorId = fresh.vendor?.id ?? null;
+            token.vendorStatus = fresh.vendor?.status ?? null;
+          }
+        } catch {
+          // Keep the existing token if the database is briefly unavailable.
+        }
+      }
       return token;
     },
     async session({ session, token }) {

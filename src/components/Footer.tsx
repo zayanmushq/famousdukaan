@@ -24,8 +24,13 @@ export default function Footer() {
                   </Link>
                 </div>
                 <div>
+                  <Link href="/sell" className="hover:text-neutral-900 transition-colors">
+                    Sell on FamousDukaan
+                  </Link>
+                </div>
+                <div>
                   <Link href="/plans" className="hover:text-neutral-900 transition-colors">
-                    Become a Seller
+                    Seller plans
                   </Link>
                 </div>
               </div>

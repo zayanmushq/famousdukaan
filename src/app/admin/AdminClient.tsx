@@ -3,12 +3,6 @@
 import { useMemo, useState } from "react";
 import { formatInr } from "@/lib/money";
 
-const mockVendors = [
-  { id: "v1", name: "Atelier Noir", products: 12, sales: 18420, commission: 1842, status: "Active" },
-  { id: "v2", name: "Form Studio", products: 8, sales: 12180, commission: 1461, status: "Active" },
-  { id: "v3", name: "Lumen", products: 5, sales: 9650, commission: 965, status: "Pending" },
-];
-
 export type AdminPayment = {
   id: string;
   orderNo: string;
@@ -40,6 +34,29 @@ export type AdminOrder = {
   }[];
 };
 
+export type AdminVendor = {
+  id: string;
+  storeName: string;
+  slug: string;
+  description: string | null;
+  contactPhone: string | null;
+  pickupCity: string | null;
+  pickupState: string | null;
+  pickupPincode: string | null;
+  pan: string | null;
+  gstin: string | null;
+  bankAccountHolder: string | null;
+  bankIfsc: string | null;
+  bankAccountMasked: string | null;
+  status: string;
+  statusReason: string | null;
+  reviewedAt: string | Date | null;
+  reviewedBy: { id: string; email: string; name: string | null } | null;
+  createdAt: string | Date;
+  user: { id: string; email: string; name: string | null; role: string };
+  productCount: number;
+};
+
 export type AdminReview = {
   id: string;
   rating: number;
@@ -56,23 +73,58 @@ export default function AdminClient({
   payments: initialPayments,
   orders: initialOrders,
   reviews: initialReviews,
+  vendors: initialVendors,
 }: {
   payments: AdminPayment[];
   orders: AdminOrder[];
   reviews: AdminReview[];
+  vendors: AdminVendor[];
 }) {
   const [tab, setTab] = useState("payments");
   const [payments, setPayments] = useState(initialPayments);
   const [orders, setOrders] = useState(initialOrders);
   const [reviews, setReviews] = useState(initialReviews);
+  const [vendors, setVendors] = useState(initialVendors);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [vendorReasons, setVendorReasons] = useState<Record<string, string>>({});
   const [filters, setFilters] = useState({ paymentStatus: "", status: "", vendorId: "" });
 
   const pendingCount = useMemo(
     () => payments.filter((p) => p.paymentStatus === "PENDING" || p.paymentStatus === "SUBMITTED").length,
     [payments]
   );
+
+
+  async function refreshVendors() {
+    const res = await fetch("/api/admin/vendors");
+    if (!res.ok) throw new Error("Could not refresh vendors");
+    const data = await res.json() as { vendors?: AdminVendor[] };
+    setVendors(data.vendors || []);
+  }
+
+  async function reviewVendor(id: string, action: "approve" | "reject" | "suspend") {
+    setError("");
+    setBusyId(id + action);
+    try {
+      const reason = (vendorReasons[id] || "").trim();
+      const res = await fetch(`/api/admin/vendors/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action, reason }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) {
+        setError(data.error || "Could not update vendor");
+        return;
+      }
+      await refreshVendors();
+    } catch {
+      setError("Could not update vendor");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function refresh() {
     const res = await fetch("/api/admin/payments");
@@ -335,37 +387,75 @@ export default function AdminClient({
       )}
 
       {tab === "vendors" && (
-        <div className="border border-neutral-200 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <th className="text-left p-4 font-medium">Vendor</th>
-                <th className="text-left p-4 font-medium">Products</th>
-                <th className="text-left p-4 font-medium">Sales</th>
-                <th className="text-left p-4 font-medium">Commission</th>
-                <th className="text-left p-4 font-medium">Status</th>
-                <th className="text-left p-4 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockVendors.map((v) => (
-                <tr key={v.id} className="border-t border-neutral-100">
-                  <td className="p-4 font-medium">{v.name}</td>
-                  <td className="p-4">{v.products}</td>
-                  <td className="p-4">{formatInr(v.sales)}</td>
-                  <td className="p-4">{formatInr(v.commission)}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${v.status === "Active" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
-                      {v.status}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <button className="text-xs underline">Manage</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {vendors.length === 0 ? (
+            <p className="text-neutral-500">No vendor applications yet.</p>
+          ) : vendors.map((vendor) => (
+            <div key={vendor.id} className="border border-neutral-200 rounded-xl p-5 space-y-3">
+              <div className="flex flex-wrap justify-between gap-4">
+                <div>
+                  <div className="font-medium">{vendor.storeName} <span className="text-neutral-400 font-normal">/{vendor.slug}</span></div>
+                  <div className="text-sm text-neutral-500">
+                    {vendor.user.name || "Applicant"} · {vendor.user.email} · {vendor.user.role} · {vendor.productCount} products
+                  </div>
+                </div>
+                <div className="text-sm text-right">
+                  <div className="font-medium">{vendor.status}</div>
+                  {vendor.reviewedBy && (
+                    <div className="text-xs text-neutral-500">
+                      Reviewed by {vendor.reviewedBy.name || vendor.reviewedBy.email}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-neutral-600">{vendor.description}</p>
+              <div className="text-xs text-neutral-500 space-y-1">
+                <div>Phone: {vendor.contactPhone || "—"} · Pickup: {[vendor.pickupCity, vendor.pickupState, vendor.pickupPincode].filter(Boolean).join(", ") || "—"}</div>
+                <div>PAN: {vendor.pan || "—"} · GSTIN: {vendor.gstin || "—"}</div>
+                <div>Bank: {vendor.bankAccountHolder || "—"} · {vendor.bankIfsc || "—"} · {vendor.bankAccountMasked || "—"}</div>
+                {vendor.statusReason && <div>Reason: {vendor.statusReason}</div>}
+              </div>
+              {vendor.status !== "APPROVED" && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    placeholder="Reason for reject or suspend"
+                    value={vendorReasons[vendor.id] || ""}
+                    onChange={(e) => setVendorReasons((current) => ({ ...current, [vendor.id]: e.target.value }))}
+                    className="px-3 py-1.5 border border-neutral-200 rounded text-sm min-w-64"
+                  />
+                  {vendor.status !== "APPROVED" && (
+                    <button type="button" disabled={busyId === vendor.id + "approve"} onClick={() => void reviewVendor(vendor.id, "approve")} className="text-sm underline disabled:opacity-50">
+                      Approve
+                    </button>
+                  )}
+                  {vendor.status !== "REJECTED" && (
+                    <button type="button" disabled={busyId === vendor.id + "reject"} onClick={() => void reviewVendor(vendor.id, "reject")} className="text-sm underline disabled:opacity-50">
+                      Reject
+                    </button>
+                  )}
+                  {vendor.status !== "SUSPENDED" && (
+                    <button type="button" disabled={busyId === vendor.id + "suspend"} onClick={() => void reviewVendor(vendor.id, "suspend")} className="text-sm underline disabled:opacity-50">
+                      Suspend
+                    </button>
+                  )}
+                </div>
+              )}
+              {vendor.status === "APPROVED" && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    placeholder="Reason to suspend"
+                    value={vendorReasons[vendor.id] || ""}
+                    onChange={(e) => setVendorReasons((current) => ({ ...current, [vendor.id]: e.target.value }))}
+                    className="px-3 py-1.5 border border-neutral-200 rounded text-sm min-w-64"
+                  />
+                  <button type="button" disabled={busyId === vendor.id + "suspend"} onClick={() => void reviewVendor(vendor.id, "suspend")} className="text-sm underline disabled:opacity-50">
+                    Suspend
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

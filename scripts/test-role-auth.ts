@@ -104,7 +104,7 @@ async function main() {
       data: {
         email: users.seller.email,
         name: users.seller.name,
-        role: "VENDOR",
+        role: "CUSTOMER",
         passwordHash: await bcrypt.hash(passwords.seller, 12),
         vendor: {
           create: {
@@ -160,9 +160,9 @@ async function main() {
 
     const sellerLogin = await login(users.seller.email, passwords.seller);
     const sellerSession = await session(sellerLogin.jar);
-    expect(sellerSession.user?.role === "VENDOR" && sellerSession.user?.vendorStatus === "PENDING", "seller session is PENDING vendor");
+    expect(sellerSession.user?.role === "CUSTOMER" && sellerSession.user?.vendorStatus === "PENDING", "pending applicant stays CUSTOMER until approved");
     const sellerDash = await request("/dashboard", { jar: sellerLogin.jar, redirect: "manual" });
-    expect(sellerDash.status === 200, "pending seller can open /dashboard");
+    expect((sellerDash.headers.get("location") || "").includes("/403"), "pending applicant is denied /dashboard");
     const sellerAdmin = await request("/admin", { jar: sellerLogin.jar, redirect: "manual" });
     expect((sellerAdmin.headers.get("location") || "").includes("/403"), "seller is denied /admin");
 

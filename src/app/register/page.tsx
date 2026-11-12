@@ -33,14 +33,14 @@ export default function RegisterPage() {
       email,
       password,
       redirect: false,
-      callbackUrl: sell ? "/dashboard" : "/account",
+      callbackUrl: sell ? "/sell" : "/account",
     });
     setPending(false);
     if (result?.error) {
       setError("Account created, but sign-in failed. Please log in.");
       return;
     }
-    router.push(sell ? "/dashboard" : "/account");
+    router.push(sell ? "/sell" : "/account");
     router.refresh();
   };
 
@@ -82,7 +82,7 @@ export default function RegisterPage() {
             onChange={(e) => setSell(e.target.checked)}
             className="mt-1"
           />
-          <span>Sell on FamousDukaan (creates a seller account pending approval)</span>
+          <span>I want to sell — I will complete a seller application after signing up</span>
         </label>
         {sell && (
           <input

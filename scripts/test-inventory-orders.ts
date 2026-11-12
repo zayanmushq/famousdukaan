@@ -33,7 +33,7 @@ const passwords = {
 type CookieJar = Map<string, string>;
 const emails = Object.values(users).map((u) => u.email);
 const slugs = [`temp-inv-${suffix}`, `temp-inv2-${suffix}`];
-let stockSnapshot: { id: string; stock: number; status: "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" }[] = [];
+let stockSnapshot: { id: string; stock: number; status: "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" | "ARCHIVED" }[] = [];
 let tempProductId = "";
 let tempVendorId = "";
 let tempVendor2Id = "";

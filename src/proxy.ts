@@ -73,7 +73,10 @@ export async function proxy(request: NextRequest) {
     if (!isLoggedIn) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (role !== "VENDOR" && role !== "ADMIN") {
+    if (role === "ADMIN") {
+      return NextResponse.next();
+    }
+    if (role !== "VENDOR" || token?.vendorStatus !== "APPROVED") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return NextResponse.next();
@@ -89,8 +92,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/403", request.url));
   }
 
-  if (startsWithAny(pathname, vendorPrefixes) && role !== "VENDOR" && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/403", request.url));
+  if (startsWithAny(pathname, vendorPrefixes) && role !== "ADMIN") {
+    if (role !== "VENDOR" || token?.vendorStatus !== "APPROVED") {
+      return NextResponse.redirect(new URL("/403", request.url));
+    }
   }
 
   return NextResponse.next();
