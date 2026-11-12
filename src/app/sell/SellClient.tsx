@@ -150,6 +150,7 @@ export default function SellClient({
           <h2 className="text-sm font-medium pt-4">Tax and bank details</h2>
           <input required value={form.pan} onChange={(e) => setField("pan", e.target.value.toUpperCase())} placeholder="PAN" className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm" />
           <input value={form.gstin} onChange={(e) => setField("gstin", e.target.value.toUpperCase())} placeholder="GSTIN (optional)" className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm" />
+          <p className="text-xs text-neutral-500">Optional. Enter your GSTIN if you are registered. Leave this blank if you are not registered yet.</p>
           <input required value={form.bankAccountHolder} onChange={(e) => setField("bankAccountHolder", e.target.value)} placeholder="Account holder name" className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm" />
           <input required value={form.bankIfsc} onChange={(e) => setField("bankIfsc", e.target.value.toUpperCase())} placeholder="IFSC" className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm" />
           <input required={canReapply || !current} value={form.bankAccountNumber} onChange={(e) => setField("bankAccountNumber", e.target.value)} placeholder="Account number" className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm" />

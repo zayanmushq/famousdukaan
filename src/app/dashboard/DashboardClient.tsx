@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { formatInr } from "@/lib/money";
 import { fulfillmentLabel } from "@/lib/order-status";
 
@@ -98,7 +98,23 @@ export default function DashboardClient({
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<ProductFormState>(emptyForm(categories[0]?.name || ""));
   const [message, setMessage] = useState("");
+  const [uploadsEnabled, setUploadsEnabled] = useState(false);
   const approved = vendorStatus === "APPROVED";
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/vendor/product-images")
+      .then((res) => (res.ok ? res.json() : { enabled: false }))
+      .then((data: { enabled?: boolean }) => {
+        if (!cancelled) setUploadsEnabled(Boolean(data.enabled));
+      })
+      .catch(() => {
+        if (!cancelled) setUploadsEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function refresh() {
     const [productRes, fulfillmentRes] = await Promise.all([
@@ -213,6 +229,31 @@ export default function DashboardClient({
     }
   }
 
+  async function uploadImage(file: File) {
+    setError("");
+    setMessage("");
+    setBusy("upload");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/vendor/product-images", { method: "POST", body });
+      const data = await res.json() as { error?: string; url?: string };
+      if (!res.ok || !data.url) {
+        setError(data.error || "Could not upload image");
+        return;
+      }
+      setForm((current) => ({
+        ...current,
+        images: [current.images, data.url].filter(Boolean).join("\n"),
+      }));
+      setMessage("Image uploaded.");
+    } catch {
+      setError("Could not upload image");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function archiveProduct(product: DashboardProduct) {
     if (!confirm(`Archive ${product.name}? It will be hidden from the catalog.`)) return;
     await saveProduct(product, { status: "ARCHIVED" });
@@ -273,13 +314,33 @@ export default function DashboardClient({
                 <input type="number" min={0} step={1} value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} placeholder="Stock" className="px-3 py-2 border border-neutral-200 rounded text-sm" />
                 <input value={form.countryOfOrigin} onChange={(e) => setForm((f) => ({ ...f, countryOfOrigin: e.target.value }))} placeholder="Country of origin" className="px-3 py-2 border border-neutral-200 rounded text-sm" />
               </div>
+              {uploadsEnabled && (
+                <div>
+                  <label className="block text-xs text-neutral-500 mb-1">Upload an image (JPEG, PNG, or WebP, up to 2MB)</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={busy === "upload"}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void uploadImage(file);
+                      e.target.value = "";
+                    }}
+                    className="block text-sm"
+                  />
+                </div>
+              )}
               <textarea
                 value={form.images}
                 onChange={(e) => setForm((f) => ({ ...f, images: e.target.value }))}
-                placeholder="Image URLs, one per line (upload is not enabled until a storage service role key is configured)"
+                placeholder="Image URLs, one per line"
                 className="w-full px-3 py-2 border border-neutral-200 rounded text-sm min-h-24"
               />
-              <p className="text-xs text-neutral-500">Paste public https image URLs (JPEG, PNG, or WebP). File upload will appear here once storage is enabled.</p>
+              <p className="text-xs text-neutral-500">
+                {uploadsEnabled
+                  ? "You can upload a file or paste public https image URLs (JPEG, PNG, or WebP)."
+                  : "Paste public https image URLs (JPEG, PNG, or WebP). File upload will appear here once storage is enabled."}
+              </p>
               <div className="flex gap-3">
                 <button type="submit" disabled={busy === "form"} className="px-4 py-2 bg-neutral-900 text-white text-sm rounded-full disabled:opacity-60">
                   {busy === "form" ? "Saving..." : "Save product"}

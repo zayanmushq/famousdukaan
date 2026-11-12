@@ -3,7 +3,7 @@ export const LEGAL_DRAFT_NOTICE = "Draft — pending legal review";
 export const LEGAL_PLACEHOLDERS = {
   businessLegalName: "Rimitana Global Networks Private Limited",
   registeredAddress: "2nd Floor, 02-007, Emaar MGF The Palm Drive, Emaar Palm Square, Sector 66, Bhondsi, Gurugram, Haryana 122101, India",
-  gstin: "[GSTIN]",
+  gstin: "Not registered (turnover below the GST registration threshold). GSTIN will be displayed here once registered.",
   grievanceOfficerName: "Hashim",
   grievanceOfficerEmail: "rimitananetwork@gmail.com",
   grievanceOfficerPhone: "+91 96904 79047",

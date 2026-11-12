@@ -23,7 +23,8 @@ export default function ContactPage() {
       </ul>
       <p>
         Grievance officer: {P.grievanceOfficerName}. Email: {P.grievanceOfficerEmail}. Phone: {P.grievanceOfficerPhone}.
-        See the <Link href="/grievance" className="underline">Grievance</Link> page for how to raise a concern.
+        See the <Link href="/grievance" className="underline">Grievance</Link> page for how to raise a concern and the
+        acknowledgement and redressal timelines we aim to follow.
       </p>
     </LegalPage>
   );
