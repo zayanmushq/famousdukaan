@@ -1,13 +1,11 @@
+import { Suspense } from "react";
 import ProductCard from "@/components/ProductCard";
-import { products } from "@/lib/data";
+import { getProducts } from "@/lib/catalog";
 import Link from "next/link";
 
 export default function Home() {
-  const featured = products.slice(0, 6);
-
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-8">
-      {/* Hero */}
       <section className="py-28 md:py-36 text-center">
         <h1 className="text-5xl md:text-7xl font-light tracking-tighter max-w-4xl mx-auto leading-[1.05] text-neutral-900 dark:text-neutral-100">
           Every shop, famous shop.
@@ -25,7 +23,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured */}
       <section className="pb-28">
         <div className="flex items-baseline justify-between mb-12">
           <h2 className="text-2xl font-light tracking-tight">Featured</h2>
@@ -33,12 +30,22 @@ export default function Home() {
             View all →
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
-          {featured.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <Suspense fallback={<div className="text-neutral-500">Loading featured products...</div>}>
+          <FeaturedProducts />
+        </Suspense>
       </section>
+    </div>
+  );
+}
+
+async function FeaturedProducts() {
+  const { products } = await getProducts();
+  const featured = products.slice(0, 6);
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-16">
+      {featured.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 }

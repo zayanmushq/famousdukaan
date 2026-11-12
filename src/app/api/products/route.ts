@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { products } from "@/lib/data";
+import { getProducts } from "@/lib/catalog";
 
 export async function GET() {
-  return NextResponse.json(products);
+  const { source, products } = await getProducts();
+  return NextResponse.json(
+    { source, products },
+    { headers: { "X-Data-Source": source } }
+  );
 }
 
 export async function POST(request: Request) {

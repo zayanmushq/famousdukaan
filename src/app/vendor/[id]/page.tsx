@@ -1,11 +1,7 @@
 import { Suspense } from "react";
-import { products, vendors } from "@/lib/data";
 import { notFound } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-
-export function generateStaticParams() {
-  return vendors.map((vendor) => ({ id: vendor.id }));
-}
+import { getVendorById } from "@/lib/catalog";
 
 export default function VendorPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -17,10 +13,10 @@ export default function VendorPage({ params }: { params: Promise<{ id: string }>
 
 async function VendorDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const vendor = vendors.find((v) => v.id === id);
-  if (!vendor) notFound();
+  const result = await getVendorById(id);
+  if (!result) notFound();
 
-  const vendorProducts = products.filter((p) => p.vendorId === vendor.id);
+  const { vendor, products: vendorProducts } = result;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">

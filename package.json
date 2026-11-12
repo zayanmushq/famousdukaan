@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}\" DIRECT_URL=\"${DIRECT_URL:-${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}}\" prisma generate'"
+    "postinstall": "sh -c 'DATABASE_URL=\"${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}\" DIRECT_URL=\"${DIRECT_URL:-${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/postgres}}\" prisma generate'",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
@@ -37,5 +39,8 @@
     "@prisma/client@6.19.3": true,
     "prisma@6.19.3": true,
     "@prisma/engines@6.19.3": true
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

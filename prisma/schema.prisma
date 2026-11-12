@@ -44,7 +44,7 @@ model Product {
   vendorId      String
   vendor        Vendor    @relation(fields: [vendorId], references: [id])
   name          String
-  slug          String
+  slug          String    @unique
   description   String?
   price         Float
   comparePrice  Float?
@@ -60,6 +60,7 @@ model Product {
   updatedAt     DateTime  @updatedAt
   reviews       Review[]
   orderItems    OrderItem[]
+  wishlists     Wishlist[]
 }
 
 model Order {
@@ -104,6 +105,7 @@ model Wishlist {
   userId        String
   user          User      @relation(fields: [userId], references: [id])
   productId     String
+  product       Product   @relation(fields: [productId], references: [id])
   createdAt     DateTime  @default(now())
 
   @@unique([userId, productId])

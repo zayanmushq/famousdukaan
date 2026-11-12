@@ -1,12 +1,8 @@
 import { Suspense } from "react";
-import { products, reviews, recommended } from "@/lib/data";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+import { getProductById } from "@/lib/catalog";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -18,11 +14,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
 async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = products.find((p) => p.id === id);
-  if (!product) notFound();
+  const result = await getProductById(id);
+  if (!result) notFound();
 
-  const productReviews = reviews[product.id as keyof typeof reviews] || [];
-  const recommendedProducts = products.filter((p) => recommended.includes(p.id) && p.id !== product.id);
+  const { product, reviews: productReviews, recommended: recommendedProducts } = result;
   const bestOffer = product.offers?.[0] || { vendor: product.vendor, price: product.price, delivery: "3-5 days" };
 
   return (
@@ -47,7 +42,6 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
             <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Assured</span>
           </div>
 
-          {/* EMI Options */}
           <div className="mt-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl text-sm">
             <div className="font-medium mb-2">EMI Options</div>
             <div className="text-neutral-600 dark:text-neutral-400">
@@ -59,7 +53,6 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
             A carefully considered piece from {product.vendor}. Designed for everyday elegance with exceptional materials and craftsmanship.
           </p>
 
-          {/* Buy Box Style Offers */}
           {product.offers && product.offers.length > 1 && (
             <div className="mt-8 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
               <div className="text-sm font-medium mb-3">Other offers</div>
@@ -97,7 +90,6 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </div>
 
-      {/* Reviews */}
       {productReviews.length > 0 && (
         <div className="mt-24 pt-12 border-t border-neutral-100 dark:border-neutral-800">
           <h2 className="text-2xl font-light mb-8">Customer Reviews</h2>
@@ -115,7 +107,6 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
         </div>
       )}
 
-      {/* Recommendations */}
       {recommendedProducts.length > 0 && (
         <div className="mt-24 pt-12 border-t border-neutral-100 dark:border-neutral-800">
           <h2 className="text-2xl font-light mb-8">Customers also viewed</h2>
