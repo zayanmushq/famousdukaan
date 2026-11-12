@@ -30,6 +30,9 @@ export async function POST(
   if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  if (order.cancelledAt || order.status === "CANCELLED") {
+    return NextResponse.json({ error: "This order has been cancelled" }, { status: 409 });
+  }
   if (order.paymentStatus === "PAID") {
     return NextResponse.json({ error: "This order is already paid" }, { status: 409 });
   }

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { requireRole } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
-import AdminClient, { type AdminPayment } from "./AdminClient";
+import { expireUnpaidOrdersSafe } from "@/lib/inventory";
+import AdminClient, { type AdminOrder, type AdminPayment } from "./AdminClient";
 
 export default function AdminPage() {
   return (
@@ -13,12 +14,23 @@ export default function AdminPage() {
 
 async function AdminLoader() {
   await requireRole(["ADMIN"], "/admin");
-  const rows = await prisma.order.findMany({
-    where: { paymentStatus: { in: ["PENDING", "SUBMITTED"] } },
-    include: { user: { select: { email: true, name: true } } },
-    orderBy: { createdAt: "desc" },
-  });
-  const payments: AdminPayment[] = rows.map((row) => ({
+  await expireUnpaidOrdersSafe();
+  const [paymentRows, orderRows] = await Promise.all([
+    prisma.order.findMany({
+      where: { paymentStatus: { in: ["PENDING", "SUBMITTED"] } },
+      include: { user: { select: { email: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.order.findMany({
+      include: {
+        user: { select: { email: true, name: true } },
+        fulfillments: { include: { vendor: { select: { storeName: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+  ]);
+  const payments: AdminPayment[] = paymentRows.map((row) => ({
     id: row.id,
     orderNo: row.orderNo,
     total: row.total,
@@ -29,5 +41,23 @@ async function AdminLoader() {
     customerName: row.user.name,
     customerEmail: row.user.email,
   }));
-  return <AdminClient payments={payments} />;
+  const orders: AdminOrder[] = orderRows.map((row) => ({
+    id: row.id,
+    orderNo: row.orderNo,
+    total: row.total,
+    paymentStatus: row.paymentStatus,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    refundMarkedAt: row.refundMarkedAt?.toISOString() ?? null,
+    cancelledAt: row.cancelledAt?.toISOString() ?? null,
+    customerName: row.user.name,
+    customerEmail: row.user.email,
+    fulfillments: row.fulfillments.map((f) => ({
+      id: f.id,
+      status: f.status,
+      trackingNumber: f.trackingNumber,
+      vendorName: f.vendor.storeName,
+    })),
+  }));
+  return <AdminClient payments={payments} orders={orders} />;
 }

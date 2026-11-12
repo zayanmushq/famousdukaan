@@ -6,7 +6,7 @@ import Link from "next/link";
 import { clearCart, getCart, type CartItem } from "@/lib/cart";
 import { formatInr } from "@/lib/money";
 
-type CatalogProduct = { id: string; name: string; price: number; vendor: string };
+type CatalogProduct = { id: string; name: string; price: number; vendor: string; stock?: number };
 
 const emptyAddress = { name: "", phone: "", address: "", city: "", pincode: "" };
 
@@ -33,7 +33,10 @@ export default function CheckoutClient() {
     .map((item) => {
       const product = productMap.get(item.productId);
       if (!product) return null;
-      return { ...item, product, lineTotal: product.price * item.quantity };
+      const stock = product.stock ?? 0;
+      if (stock <= 0) return null;
+      const quantity = Math.min(item.quantity, stock);
+      return { ...item, quantity, product, stock, lineTotal: product.price * quantity };
     })
     .filter((line): line is NonNullable<typeof line> => line !== null);
   const estimatedTotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
@@ -126,6 +129,9 @@ export default function CheckoutClient() {
 
         <div className="border border-neutral-200 rounded-xl p-6 h-fit">
           <h3 className="font-medium mb-4">Order summary</h3>
+          {loaded && cart.length > 0 && lines.length < cart.length && (
+            <p className="text-xs text-red-700 mb-3">Some items are out of stock and were left out of this order.</p>
+          )}
           <div className="space-y-3 text-sm">
             {lines.map((line) => (
               <div key={line.productId} className="flex justify-between gap-4">

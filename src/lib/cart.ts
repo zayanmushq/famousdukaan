@@ -29,12 +29,14 @@ export function setCart(items: CartItem[]) {
   window.dispatchEvent(new Event("famousdukaan-cart-changed"));
 }
 
-export function addToCart(productId: string, quantity = 1) {
-  const qty = Math.min(Math.max(1, Math.floor(quantity)), 99);
+export function addToCart(productId: string, quantity = 1, maxStock = 99) {
+  const cap = Math.min(99, Math.max(0, Math.floor(maxStock)));
+  if (cap < 1) return getCart();
+  const qty = Math.min(Math.max(1, Math.floor(quantity)), cap);
   const items = getCart();
   const existing = items.find((item) => item.productId === productId);
   if (existing) {
-    existing.quantity = Math.min(existing.quantity + qty, 99);
+    existing.quantity = Math.min(existing.quantity + qty, cap);
   } else {
     items.push({ productId, quantity: qty });
   }
@@ -42,15 +44,16 @@ export function addToCart(productId: string, quantity = 1) {
   return items;
 }
 
-export function updateCartQuantity(productId: string, quantity: number) {
+export function updateCartQuantity(productId: string, quantity: number, maxStock = 99) {
+  const cap = Math.min(99, Math.max(0, Math.floor(maxStock)));
   const qty = Math.floor(quantity);
-  if (qty < 1) {
+  if (qty < 1 || cap < 1) {
     setCart(getCart().filter((item) => item.productId !== productId));
     return;
   }
   setCart(
     getCart().map((item) =>
-      item.productId === productId ? { ...item, quantity: Math.min(qty, 99) } : item
+      item.productId === productId ? { ...item, quantity: Math.min(qty, cap) } : item
     )
   );
 }

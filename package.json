@@ -11,7 +11,8 @@
     "seed": "tsx prisma/seed.ts",
     "set-admin": "tsx scripts/set-admin.ts",
     "test:auth": "tsx scripts/test-role-auth.ts",
-    "test:upi": "tsx scripts/test-upi-checkout.ts"
+    "test:upi": "tsx scripts/test-upi-checkout.ts",
+    "test:inventory": "tsx scripts/test-inventory-orders.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -11,6 +11,7 @@ type CatalogProduct = {
   price: number;
   vendor: string;
   image: string;
+  stock?: number;
 };
 
 export default function CartPage() {
@@ -39,7 +40,9 @@ export default function CartPage() {
     .map((item) => {
       const product = productMap.get(item.productId);
       if (!product) return null;
-      return { ...item, product, lineTotal: product.price * item.quantity };
+      const stock = product.stock ?? 0;
+      const quantity = Math.min(item.quantity, Math.max(stock, 0));
+      return { ...item, quantity, product, stock, lineTotal: product.price * quantity, outOfStock: stock <= 0 };
     })
     .filter((line): line is NonNullable<typeof line> => line !== null);
 
@@ -80,15 +83,16 @@ export default function CartPage() {
                     <div className="flex-1">
                       <div className="font-medium text-sm">{item.product.name}</div>
                       <div className="mt-1 text-sm text-neutral-500">{formatInr(item.product.price)}</div>
+                      {item.outOfStock && <div className="mt-1 text-xs text-red-700">Out of stock</div>}
                       <div className="mt-3 flex items-center gap-3">
                         <label className="text-xs text-neutral-500">
                           Qty
                           <input
                             type="number"
                             min={1}
-                            max={99}
+                            max={Math.max(item.stock, 0)}
                             value={item.quantity}
-                            onChange={(e) => updateCartQuantity(item.productId, Number(e.target.value))}
+                            onChange={(e) => updateCartQuantity(item.productId, Number(e.target.value), item.stock)}
                             className="ml-2 w-16 px-2 py-1 border border-neutral-200 rounded"
                           />
                         </label>

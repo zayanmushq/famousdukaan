@@ -87,16 +87,33 @@ function randomUtr() {
 }
 
 const emails = Object.values(users).map((u) => u.email);
+let stockSnapshot: { id: string; stock: number; status: "ACTIVE" | "DRAFT" | "OUT_OF_STOCK" }[] = [];
+
+async function snapshotStock() {
+  stockSnapshot = await prisma.product.findMany({ select: { id: true, stock: true, status: true } });
+}
+
+async function restoreStock() {
+  for (const row of stockSnapshot) {
+    await prisma.product.update({ where: { id: row.id }, data: { stock: row.stock, status: row.status } });
+  }
+}
 
 async function cleanup() {
+  await prisma.inventoryMovement.deleteMany({
+    where: { OR: [{ createdBy: { email: { in: emails } } }, { order: { user: { email: { in: emails } } } }] },
+  });
   await prisma.orderItem.deleteMany({ where: { order: { user: { email: { in: emails } } } } });
+  await prisma.orderFulfillment.deleteMany({ where: { order: { user: { email: { in: emails } } } } });
   await prisma.order.deleteMany({ where: { OR: [{ user: { email: { in: emails } } }, { verifiedBy: { email: { in: emails } } }] } });
   await prisma.loginAttempt.deleteMany({ where: { email: { in: emails } } });
   await prisma.user.deleteMany({ where: { email: { in: emails } } });
+  await restoreStock();
 }
 
 async function main() {
   try {
+    await snapshotStock();
     await prisma.user.create({
       data: {
         email: users.customer.email,

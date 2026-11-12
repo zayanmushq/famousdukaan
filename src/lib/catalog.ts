@@ -5,6 +5,7 @@ import {
   recommended as demoRecommended,
 } from "@/lib/data";
 import { prisma } from "@/lib/prisma";
+import { expireUnpaidOrdersSafe } from "@/lib/inventory";
 
 export type CatalogProduct = (typeof demoProducts)[number];
 export type CatalogVendor = (typeof demoVendors)[number];
@@ -15,6 +16,7 @@ type ProductRow = {
   id: string;
   name: string;
   price: number;
+  stock: number;
   images: string[];
   category: string;
   rating: number;
@@ -45,6 +47,7 @@ function mapProduct(row: ProductRow): CatalogProduct {
     id: row.id,
     name: row.name,
     price: row.price,
+    stock: row.stock,
     vendor: row.vendor.storeName,
     vendorId: row.vendorId,
     image,
@@ -75,9 +78,10 @@ async function fromDb<T>(fn: () => Promise<T>): Promise<T> {
 
 export async function getProducts(): Promise<{ source: CatalogSource; products: CatalogProduct[] }> {
   try {
+    await expireUnpaidOrdersSafe();
     const rows = await fromDb(() =>
       prisma.product.findMany({
-        where: { status: "ACTIVE" },
+        where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
         include: { vendor: true },
         orderBy: { createdAt: "asc" },
       })
@@ -111,6 +115,7 @@ export async function getProductById(id: string): Promise<{
   recommended: CatalogProduct[];
 } | null> {
   try {
+    await expireUnpaidOrdersSafe();
     const row = await fromDb(() =>
       prisma.product.findUnique({
         where: { id },

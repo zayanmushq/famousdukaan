@@ -36,6 +36,11 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
 
           <div className="mt-4 flex items-center gap-3 flex-wrap">
             <div className="text-2xl">${bestOffer.price}</div>
+            {(product.stock ?? 0) <= 0 ? (
+              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">Out of stock</span>
+            ) : product.stock <= 5 ? (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Only {product.stock} left</span>
+            ) : null}
             <div className="text-sm text-neutral-500">★ {product.rating} · {product.reviews} reviews</div>
             {product.fastDelivery && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Fast Delivery</span>
@@ -72,7 +77,10 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <AddToCartButton productId={product.id} price={bestOffer.price} />
+            <AddToCartButton productId={product.id} price={bestOffer.price} stock={product.stock ?? 0} />
+            {(product.stock ?? 0) <= 0 && (
+              <div className="text-sm text-red-700 self-center">Out of stock</div>
+            )}
             <a
               href={`https://wa.me/?text=Check%20out%20${encodeURIComponent(product.name)}%20on%20Aether`}
               target="_blank"

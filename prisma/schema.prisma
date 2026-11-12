@@ -9,91 +9,147 @@ datasource db {
 }
 
 model User {
-  id             String     @id @default(cuid())
-  email          String     @unique
-  name           String?
-  passwordHash   String?
-  role           Role       @default(CUSTOMER)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  vendor         Vendor?
-  orders         Order[]
-  verifiedOrders Order[]    @relation("VerifiedOrders")
-  reviews        Review[]
-  wishlist       Wishlist[]
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  passwordHash       String?
+  role               Role                @default(CUSTOMER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  vendor             Vendor?
+  orders             Order[]
+  verifiedOrders     Order[]             @relation("VerifiedOrders")
+  reviews            Review[]
+  wishlist           Wishlist[]
+  inventoryMovements InventoryMovement[]
 }
 
 model Vendor {
-  id          String       @id @default(cuid())
-  userId      String       @unique
-  user        User         @relation(fields: [userId], references: [id])
-  storeName   String
-  slug        String       @unique
-  description String?
-  logo        String?
-  rating      Float        @default(0)
-  status      VendorStatus @default(PENDING)
-  plan        Plan         @default(FREE)
-  commission  Float        @default(15)
-  createdAt   DateTime     @default(now())
-  products    Product[]
-  orders      Order[]
+  id           String             @id @default(cuid())
+  userId       String             @unique
+  user         User               @relation(fields: [userId], references: [id])
+  storeName    String
+  slug         String             @unique
+  description  String?
+  logo         String?
+  rating       Float              @default(0)
+  status       VendorStatus       @default(PENDING)
+  plan         Plan               @default(FREE)
+  commission   Float              @default(15)
+  createdAt    DateTime           @default(now())
+  products     Product[]
+  orders       Order[]
+  fulfillments OrderFulfillment[]
 }
 
 model Product {
-  id           String        @id @default(cuid())
-  vendorId     String
-  vendor       Vendor        @relation(fields: [vendorId], references: [id])
-  name         String
-  slug         String        @unique
-  description  String?
-  price        Float
-  comparePrice Float?
-  stock        Int           @default(0)
-  images       String[]
-  category     String
-  rating       Float         @default(0)
-  reviewCount  Int           @default(0)
-  fastDelivery Boolean       @default(false)
-  assured      Boolean       @default(false)
-  status       ProductStatus @default(ACTIVE)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  reviews      Review[]
-  orderItems   OrderItem[]
-  wishlists    Wishlist[]
+  id                String              @id @default(cuid())
+  vendorId          String
+  vendor            Vendor              @relation(fields: [vendorId], references: [id])
+  name              String
+  slug              String              @unique
+  description       String?
+  price             Float
+  comparePrice      Float?
+  stock             Int                 @default(0)
+  sku               String?
+  lowStockThreshold Int                 @default(5)
+  images            String[]
+  category          String
+  rating            Float               @default(0)
+  reviewCount       Int                 @default(0)
+  fastDelivery      Boolean             @default(false)
+  assured           Boolean             @default(false)
+  status            ProductStatus       @default(ACTIVE)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  reviews           Review[]
+  orderItems        OrderItem[]
+  wishlists         Wishlist[]
+  movements         InventoryMovement[]
+
+  @@unique([vendorId, sku])
 }
 
 model Order {
-  id              String        @id @default(cuid())
-  orderNo         String        @unique
+  id              String              @id @default(cuid())
+  orderNo         String              @unique
   userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  user            User                @relation(fields: [userId], references: [id])
   vendorId        String?
-  vendor          Vendor?       @relation(fields: [vendorId], references: [id])
+  vendor          Vendor?             @relation(fields: [vendorId], references: [id])
   total           Float
-  status          OrderStatus   @default(PENDING_PAYMENT)
-  paymentMethod   String        @default("UPI")
+  status          OrderStatus         @default(PENDING_PAYMENT)
+  paymentMethod   String              @default("UPI")
   paymentId       String?
-  paymentStatus   PaymentStatus @default(PENDING)
-  upiTxnRef       String?       @unique
+  paymentStatus   PaymentStatus       @default(PENDING)
+  upiTxnRef       String?             @unique
   paidAt          DateTime?
   verifiedById    String?
-  verifiedBy      User?         @relation("VerifiedOrders", fields: [verifiedById], references: [id])
+  verifiedBy      User?               @relation("VerifiedOrders", fields: [verifiedById], references: [id])
   shippingAddress Json
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  cancelledAt     DateTime?
+  cancelReason    String?
+  refundMarkedAt  DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   items           OrderItem[]
+  fulfillments    OrderFulfillment[]
+  movements       InventoryMovement[]
+
+  @@index([paymentStatus, status, createdAt])
+}
+
+model OrderFulfillment {
+  id             String              @id @default(cuid())
+  orderId        String
+  order          Order               @relation(fields: [orderId], references: [id])
+  vendorId       String
+  vendor         Vendor              @relation(fields: [vendorId], references: [id])
+  status         FulfillmentStatus   @default(AWAITING_PAYMENT)
+  trackingNumber String?
+  packedAt       DateTime?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  items          OrderItem[]
+  movements      InventoryMovement[]
+
+  @@index([vendorId, status])
+  @@index([orderId])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
+  id            String           @id @default(cuid())
+  orderId       String
+  order         Order            @relation(fields: [orderId], references: [id])
+  fulfillmentId String
+  fulfillment   OrderFulfillment @relation(fields: [fulfillmentId], references: [id])
+  productId     String
+  product       Product          @relation(fields: [productId], references: [id])
+  quantity      Int
+  price         Float
+}
+
+model InventoryMovement {
+  id            String                @id @default(cuid())
+  productId     String
+  product       Product               @relation(fields: [productId], references: [id])
+  orderId       String?
+  order         Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  fulfillmentId String?
+  fulfillment   OrderFulfillment?     @relation(fields: [fulfillmentId], references: [id], onDelete: SetNull)
+  type          InventoryMovementType
+  quantity      Int
+  balanceAfter  Int
+  reason        String?
+  createdById   String?
+  createdBy     User?                 @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime              @default(now())
+
+  @@index([productId, createdAt])
+  @@index([orderId])
 }
 
 model Review {
@@ -147,7 +203,10 @@ enum OrderStatus {
   PENDING
   PENDING_PAYMENT
   CONFIRMED
+  PACKED
+  PARTIALLY_SHIPPED
   SHIPPED
+  PARTIALLY_DELIVERED
   DELIVERED
   CANCELLED
   RETURNED
@@ -158,6 +217,21 @@ enum PaymentStatus {
   SUBMITTED
   PAID
   REJECTED
+}
+
+enum FulfillmentStatus {
+  AWAITING_PAYMENT
+  CONFIRMED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum InventoryMovementType {
+  RESERVE
+  RELEASE
+  ADJUST
 }
 
 model LoginAttempt {
