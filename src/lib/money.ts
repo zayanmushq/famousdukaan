@@ -16,11 +16,11 @@ export function formatInr(amount: number): string {
 
 /**
  * Convert a USD-like demo catalog price to INR.
- * Rule: multiply by 83, then round to the nearest integer ending in 9 (ties round up).
+ * Rule: multiply by 95, then round to the nearest integer ending in 9 (ties round up).
  * Use only for seed/demo catalog prices, never for existing order totals.
  */
 export function usdDemoToInr(usd: number): number {
-  const rounded = Math.round(usd * 83);
+  const rounded = Math.round(usd * 95);
   if (rounded % 10 === 9) return rounded;
   const base = rounded - (rounded % 10);
   const lower = base - 1;

@@ -2,7 +2,7 @@ export const products = [
   {
     id: "1",
     name: "Minimal Leather Tote",
-    price: 20589,
+    price: 23559,
     stock: 20,
     vendor: "Atelier Noir",
     vendorId: "v1",
@@ -12,14 +12,14 @@ export const products = [
     reviews: 0,
     fastDelivery: true,
     offers: [
-      { vendor: "Atelier Noir", vendorId: "v1", price: 20589, rating: 4.9, delivery: "2-3 days" },
-      { vendor: "Leather Co.", vendorId: "v5", price: 21499, rating: 4.6, delivery: "4-5 days" },
+      { vendor: "Atelier Noir", vendorId: "v1", price: 23559, rating: 4.9, delivery: "2-3 days" },
+      { vendor: "Leather Co.", vendorId: "v5", price: 24609, rating: 4.6, delivery: "4-5 days" },
     ],
   },
   {
     id: "2",
     name: "Ceramic Pour-Over Set",
-    price: 7139,
+    price: 8169,
     stock: 20,
     vendor: "Form Studio",
     vendorId: "v2",
@@ -29,13 +29,13 @@ export const products = [
     reviews: 0,
     fastDelivery: true,
     offers: [
-      { vendor: "Form Studio", vendorId: "v2", price: 7139, rating: 4.9, delivery: "1-2 days" },
+      { vendor: "Form Studio", vendorId: "v2", price: 8169, rating: 4.9, delivery: "1-2 days" },
     ],
   },
   {
     id: "3",
     name: "Merino Wool Scarf",
-    price: 9959,
+    price: 11399,
     stock: 20,
     vendor: "Atelier Noir",
     vendorId: "v1",
@@ -45,13 +45,13 @@ export const products = [
     reviews: 0,
     fastDelivery: false,
     offers: [
-      { vendor: "Atelier Noir", vendorId: "v1", price: 9959, rating: 4.7, delivery: "3-4 days" },
+      { vendor: "Atelier Noir", vendorId: "v1", price: 11399, rating: 4.7, delivery: "3-4 days" },
     ],
   },
   {
     id: "4",
     name: "Brass Desk Lamp",
-    price: 26559,
+    price: 30399,
     stock: 20,
     vendor: "Lumen",
     vendorId: "v3",
@@ -61,14 +61,14 @@ export const products = [
     reviews: 0,
     fastDelivery: true,
     offers: [
-      { vendor: "Lumen", vendorId: "v3", price: 26559, rating: 4.6, delivery: "2 days" },
-      { vendor: "Light Works", vendorId: "v6", price: 27809, rating: 4.4, delivery: "5 days" },
+      { vendor: "Lumen", vendorId: "v3", price: 30399, rating: 4.6, delivery: "2 days" },
+      { vendor: "Light Works", vendorId: "v6", price: 31829, rating: 4.4, delivery: "5 days" },
     ],
   },
   {
     id: "5",
     name: "Linen Throw Pillow",
-    price: 5649,
+    price: 6459,
     stock: 20,
     vendor: "Form Studio",
     vendorId: "v2",
@@ -78,13 +78,13 @@ export const products = [
     reviews: 0,
     fastDelivery: true,
     offers: [
-      { vendor: "Form Studio", vendorId: "v2", price: 5649, rating: 4.5, delivery: "1-2 days" },
+      { vendor: "Form Studio", vendorId: "v2", price: 6459, rating: 4.5, delivery: "1-2 days" },
     ],
   },
   {
     id: "6",
     name: "Handcrafted Watch",
-    price: 73869,
+    price: 84549,
     stock: 20,
     vendor: "Chronos",
     vendorId: "v4",
@@ -94,7 +94,7 @@ export const products = [
     reviews: 0,
     fastDelivery: false,
     offers: [
-      { vendor: "Chronos", vendorId: "v4", price: 73869, rating: 4.9, delivery: "5-7 days" },
+      { vendor: "Chronos", vendorId: "v4", price: 84549, rating: 4.9, delivery: "5-7 days" },
     ],
   },
 ];
