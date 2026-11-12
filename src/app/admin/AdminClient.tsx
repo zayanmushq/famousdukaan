@@ -40,16 +40,31 @@ export type AdminOrder = {
   }[];
 };
 
+export type AdminReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  status: string;
+  createdAt: string;
+  productId: string;
+  productName: string;
+  customerName: string | null;
+  customerEmail: string;
+};
+
 export default function AdminClient({
   payments: initialPayments,
   orders: initialOrders,
+  reviews: initialReviews,
 }: {
   payments: AdminPayment[];
   orders: AdminOrder[];
+  reviews: AdminReview[];
 }) {
   const [tab, setTab] = useState("payments");
   const [payments, setPayments] = useState(initialPayments);
   const [orders, setOrders] = useState(initialOrders);
+  const [reviews, setReviews] = useState(initialReviews);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({ paymentStatus: "", status: "", vendorId: "" });
@@ -191,13 +206,44 @@ export default function AdminClient({
     }
   }
 
+  async function refreshReviews() {
+    const res = await fetch("/api/admin/reviews");
+    if (!res.ok) throw new Error("Could not refresh reviews");
+    const data = await res.json() as { reviews?: AdminReview[] };
+    setReviews(data.reviews || []);
+  }
+
+  async function actReview(id: string, action: "hide" | "unhide" | "delete") {
+    setError("");
+    setBusyId(id);
+    try {
+      const res = action === "delete"
+        ? await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" })
+        : await fetch(`/api/admin/reviews/${id}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ status: action === "hide" ? "HIDDEN" : "VISIBLE" }),
+          });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) {
+        setError(data.error || "Review action failed");
+        return;
+      }
+      await refreshReviews();
+    } catch {
+      setError("Review action failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-light tracking-tight mb-2">Admin Panel</h1>
       <p className="text-neutral-500 mb-10">Marketplace control center</p>
 
       <div className="flex gap-2 mb-10 border-b border-neutral-200">
-        {["payments", "overview", "vendors", "orders", "settings"].map((t) => (
+        {["payments", "overview", "vendors", "orders", "reviews", "settings"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -397,6 +443,59 @@ export default function AdminClient({
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "reviews" && (
+        <div>
+          <h2 className="text-lg font-medium mb-4">Reviews</h2>
+          {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+          {reviews.length === 0 ? (
+            <p className="text-neutral-500">No reviews yet.</p>
+          ) : (
+            <div className="border border-neutral-200 rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <th className="text-left p-4 font-medium">Product</th>
+                    <th className="text-left p-4 font-medium">Customer</th>
+                    <th className="text-left p-4 font-medium">Rating</th>
+                    <th className="text-left p-4 font-medium">Comment</th>
+                    <th className="text-left p-4 font-medium">Status</th>
+                    <th className="text-left p-4 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reviews.map((review) => (
+                    <tr key={review.id} className="border-t border-neutral-100">
+                      <td className="p-4">{review.productName}</td>
+                      <td className="p-4">
+                        <div>{review.customerName || "Customer"}</div>
+                        <div className="text-xs text-neutral-500">{review.customerEmail}</div>
+                      </td>
+                      <td className="p-4">★ {review.rating}</td>
+                      <td className="p-4 max-w-sm">{review.comment || "—"}</td>
+                      <td className="p-4">{review.status}</td>
+                      <td className="p-4 space-x-3">
+                        {review.status === "VISIBLE" ? (
+                          <button type="button" disabled={busyId === review.id} onClick={() => void actReview(review.id, "hide")} className="text-xs underline disabled:opacity-50">
+                            Hide
+                          </button>
+                        ) : (
+                          <button type="button" disabled={busyId === review.id} onClick={() => void actReview(review.id, "unhide")} className="text-xs underline disabled:opacity-50">
+                            Unhide
+                          </button>
+                        )}
+                        <button type="button" disabled={busyId === review.id} onClick={() => void actReview(review.id, "delete")} className="text-xs underline text-red-700 disabled:opacity-50">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

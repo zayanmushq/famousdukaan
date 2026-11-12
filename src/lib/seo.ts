@@ -47,8 +47,9 @@ export function websiteJsonLd() {
   };
 }
 
-export function productJsonLd(product: CatalogProduct) {
+export function productJsonLd(product: CatalogProduct, reviews: { name: string; rating: number; comment: string }[] = []) {
   const url = absoluteUrl(`/product/${product.id}`);
+  const visible = reviews.filter((review) => review.rating >= 1);
   const offers = (product.offers?.length
     ? product.offers
     : [{ vendor: product.vendor, vendorId: product.vendorId, price: product.price, rating: product.rating, delivery: "3-5 days" }]
@@ -78,12 +79,25 @@ export function productJsonLd(product: CatalogProduct) {
     offers: offers.length === 1 ? offers[0] : offers,
   };
 
-  if (product.reviews > 0 && product.rating > 0) {
+  if (visible.length > 0) {
+    const ratingValue = Number(
+      (visible.reduce((sum, review) => sum + review.rating, 0) / visible.length).toFixed(2),
+    );
     data.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviews,
+      ratingValue,
+      reviewCount: visible.length,
+      ratingCount: visible.length,
     };
+    const withText = visible.filter((review) => review.comment);
+    if (withText.length > 0) {
+      data.review = withText.map((review) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: review.name },
+        reviewRating: { "@type": "Rating", ratingValue: review.rating, bestRating: 5, worstRating: 1 },
+        reviewBody: review.comment,
+      }));
+    }
   }
 
   return data;

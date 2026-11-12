@@ -1,9 +1,10 @@
 import {
   products as demoProducts,
   vendors as demoVendors,
-  reviews as demoReviews,
   recommended as demoRecommended,
 } from "@/lib/data";
+import { connection } from "next/server";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { expireUnpaidOrdersSafe } from "@/lib/inventory";
 
@@ -76,7 +77,8 @@ async function fromDb<T>(fn: () => Promise<T>): Promise<T> {
   return fn();
 }
 
-export async function getProducts(): Promise<{ source: CatalogSource; products: CatalogProduct[] }> {
+export const getProducts = cache(async function getProducts(): Promise<{ source: CatalogSource; products: CatalogProduct[] }> {
+  await connection();
   try {
     await expireUnpaidOrdersSafe();
     const rows = await fromDb(() =>
@@ -91,9 +93,10 @@ export async function getProducts(): Promise<{ source: CatalogSource; products: 
     console.error("getProducts fell back to demo data:", error);
     return { source: "demo", products: demoProducts };
   }
-}
+});
 
-export async function getVendors(): Promise<{ source: CatalogSource; vendors: CatalogVendor[] }> {
+export const getVendors = cache(async function getVendors(): Promise<{ source: CatalogSource; vendors: CatalogVendor[] }> {
+  await connection();
   try {
     const rows = await fromDb(() =>
       prisma.vendor.findMany({
@@ -106,14 +109,15 @@ export async function getVendors(): Promise<{ source: CatalogSource; vendors: Ca
     console.error("getVendors fell back to demo data:", error);
     return { source: "demo", vendors: demoVendors };
   }
-}
+});
 
-export async function getProductById(id: string): Promise<{
+export const getProductById = cache(async function getProductById(id: string): Promise<{
   source: CatalogSource;
   product: CatalogProduct;
   reviews: CatalogReview[];
   recommended: CatalogProduct[];
 } | null> {
+  await connection();
   try {
     await expireUnpaidOrdersSafe();
     const row = await fromDb(() =>
@@ -121,7 +125,7 @@ export async function getProductById(id: string): Promise<{
         where: { id },
         include: {
           vendor: true,
-          reviews: { include: { user: true }, orderBy: { createdAt: "asc" } },
+          reviews: { where: { status: "VISIBLE" }, include: { user: true }, orderBy: { createdAt: "asc" } },
         },
       })
     );
@@ -146,17 +150,18 @@ export async function getProductById(id: string): Promise<{
     return {
       source: "demo",
       product,
-      reviews: demoReviews[id as keyof typeof demoReviews] || [],
+      reviews: [],
       recommended: demoProducts.filter((p) => demoRecommended.includes(p.id) && p.id !== id),
     };
   }
-}
+});
 
-export async function getVendorById(id: string): Promise<{
+export const getVendorById = cache(async function getVendorById(id: string): Promise<{
   source: CatalogSource;
   vendor: CatalogVendor;
   products: CatalogProduct[];
 } | null> {
+  await connection();
   try {
     const row = await fromDb(() =>
       prisma.vendor.findUnique({
@@ -181,4 +186,4 @@ export async function getVendorById(id: string): Promise<{
       products: demoProducts.filter((p) => p.vendorId === id),
     };
   }
-}
+});

@@ -8,8 +8,8 @@ export const products = [
     vendorId: "v1",
     image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80",
     category: "Bags",
-    rating: 4.8,
-    reviews: 24,
+    rating: 0,
+    reviews: 0,
     fastDelivery: true,
     offers: [
       { vendor: "Atelier Noir", vendorId: "v1", price: 248, rating: 4.9, delivery: "2-3 days" },
@@ -25,8 +25,8 @@ export const products = [
     vendorId: "v2",
     image: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&q=80",
     category: "Home",
-    rating: 4.9,
-    reviews: 18,
+    rating: 0,
+    reviews: 0,
     fastDelivery: true,
     offers: [
       { vendor: "Form Studio", vendorId: "v2", price: 86, rating: 4.9, delivery: "1-2 days" },
@@ -41,8 +41,8 @@ export const products = [
     vendorId: "v1",
     image: "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=800&q=80",
     category: "Apparel",
-    rating: 4.7,
-    reviews: 31,
+    rating: 0,
+    reviews: 0,
     fastDelivery: false,
     offers: [
       { vendor: "Atelier Noir", vendorId: "v1", price: 120, rating: 4.7, delivery: "3-4 days" },
@@ -57,8 +57,8 @@ export const products = [
     vendorId: "v3",
     image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80",
     category: "Lighting",
-    rating: 4.6,
-    reviews: 12,
+    rating: 0,
+    reviews: 0,
     fastDelivery: true,
     offers: [
       { vendor: "Lumen", vendorId: "v3", price: 320, rating: 4.6, delivery: "2 days" },
@@ -74,8 +74,8 @@ export const products = [
     vendorId: "v2",
     image: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80",
     category: "Home",
-    rating: 4.5,
-    reviews: 9,
+    rating: 0,
+    reviews: 0,
     fastDelivery: true,
     offers: [
       { vendor: "Form Studio", vendorId: "v2", price: 68, rating: 4.5, delivery: "1-2 days" },
@@ -90,8 +90,8 @@ export const products = [
     vendorId: "v4",
     image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&q=80",
     category: "Accessories",
-    rating: 4.9,
-    reviews: 7,
+    rating: 0,
+    reviews: 0,
     fastDelivery: false,
     offers: [
       { vendor: "Chronos", vendorId: "v4", price: 890, rating: 4.9, delivery: "5-7 days" },
@@ -100,10 +100,10 @@ export const products = [
 ];
 
 export const vendors = [
-  { id: "v1", name: "Atelier Noir", description: "Timeless leather goods", rating: 4.8, products: 42 },
-  { id: "v2", name: "Form Studio", description: "Thoughtful home objects", rating: 4.9, products: 28 },
-  { id: "v3", name: "Lumen", description: "Architectural lighting", rating: 4.6, products: 15 },
-  { id: "v4", name: "Chronos", description: "Precision timepieces", rating: 4.9, products: 8 },
+  { id: "v1", name: "Atelier Noir", description: "Timeless leather goods", rating: 0, products: 42 },
+  { id: "v2", name: "Form Studio", description: "Thoughtful home objects", rating: 0, products: 28 },
+  { id: "v3", name: "Lumen", description: "Architectural lighting", rating: 0, products: 15 },
+  { id: "v4", name: "Chronos", description: "Precision timepieces", rating: 0, products: 8 },
 ];
 
 export const reviews = {

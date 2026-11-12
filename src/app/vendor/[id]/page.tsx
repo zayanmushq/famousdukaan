@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProductCard from "@/components/ProductCard";
+import RatingSummary from "@/components/RatingSummary";
 import { getVendorById } from "@/lib/catalog";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, SITE_NAME, SITE_URL, vendorDescription } from "@/lib/seo";
@@ -65,6 +66,11 @@ async function VendorDetails({ params }: VendorPageProps) {
       <div className="mb-16 text-center">
         <h1 className="text-4xl font-light">{vendor.name}</h1>
         <p className="mt-3 text-neutral-500">{vendor.description}</p>
+        <RatingSummary
+          rating={vendor.rating}
+          count={vendorProducts.reduce((sum, product) => sum + (product.reviews ?? 0), 0)}
+          className="mt-3 text-sm text-neutral-500"
+        />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
         {vendorProducts.map((product) => (

@@ -96,6 +96,7 @@ model Order {
   items           OrderItem[]
   fulfillments    OrderFulfillment[]
   movements       InventoryMovement[]
+  reviews         Review[]
 
   @@index([paymentStatus, status, createdAt])
 }
@@ -153,14 +154,23 @@ model InventoryMovement {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product      @relation(fields: [productId], references: [id])
+  orderId   String?
+  order     Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  /// Integer 1-5, enforced by a CHECK constraint in the database.
   rating    Int
   comment   String?
-  createdAt DateTime @default(now())
+  status    ReviewStatus @default(VISIBLE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([userId, productId])
+  @@index([productId, status])
+  @@index([orderId])
 }
 
 model Wishlist {
@@ -232,6 +242,11 @@ enum InventoryMovementType {
   RESERVE
   RELEASE
   ADJUST
+}
+
+enum ReviewStatus {
+  VISIBLE
+  HIDDEN
 }
 
 model LoginAttempt {

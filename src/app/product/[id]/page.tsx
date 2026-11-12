@@ -6,6 +6,10 @@ import ProductCard from "@/components/ProductCard";
 import { getProductById } from "@/lib/catalog";
 import AddToCartButton from "@/components/AddToCartButton";
 import JsonLd from "@/components/JsonLd";
+import RatingSummary from "@/components/RatingSummary";
+import ReviewForm from "@/components/ReviewForm";
+import { getAuthSession } from "@/lib/auth-guard";
+import { getReviewEligibility } from "@/lib/reviews";
 import { breadcrumbJsonLd, productJsonLd, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 type ProductPageProps = { params: Promise<{ id: string }> };
@@ -61,7 +65,7 @@ async function ProductDetails({ params }: ProductPageProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
-      <JsonLd data={productJsonLd(product)} />
+      <JsonLd data={productJsonLd(product, productReviews)} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
@@ -87,7 +91,7 @@ async function ProductDetails({ params }: ProductPageProps) {
             ) : product.stock <= 5 ? (
               <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Only {product.stock} left</span>
             ) : null}
-            <div className="text-sm text-neutral-500">★ {product.rating} · {product.reviews} reviews</div>
+            <RatingSummary rating={product.rating} count={product.reviews} />
             {product.fastDelivery && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Fast Delivery</span>
             )}
@@ -160,6 +164,8 @@ async function ProductDetails({ params }: ProductPageProps) {
         </div>
       )}
 
+      <ReviewEligibility productId={product.id} />
+
       {recommendedProducts.length > 0 && (
         <div className="mt-24 pt-12 border-t border-neutral-100 dark:border-neutral-800">
           <h2 className="text-2xl font-light mb-8">Customers also viewed</h2>
@@ -172,4 +178,12 @@ async function ProductDetails({ params }: ProductPageProps) {
       )}
     </div>
   );
+}
+
+async function ReviewEligibility({ productId }: { productId: string }) {
+  const session = await getAuthSession();
+  if (!session?.user || session.user.role !== "CUSTOMER") return null;
+  const eligibility = await getReviewEligibility(session.user.id, productId);
+  if (!eligibility.canReview) return null;
+  return <ReviewForm productId={productId} />;
 }

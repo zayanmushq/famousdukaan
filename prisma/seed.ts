@@ -49,7 +49,7 @@ async function main() {
         storeName: vendor.name,
         slug: slugify(vendor.name),
         description: vendor.description,
-        rating: vendor.rating,
+        rating: 0,
         status: "APPROVED",
         plan: "FREE",
       },
@@ -59,7 +59,7 @@ async function main() {
         storeName: vendor.name,
         slug: slugify(vendor.name),
         description: vendor.description,
-        rating: vendor.rating,
+        rating: 0,
         status: "APPROVED",
         plan: "FREE",
       },
@@ -78,8 +78,8 @@ async function main() {
         stock: 20,
         images: [product.image],
         category: product.category,
-        rating: product.rating,
-        reviewCount: product.reviews,
+        rating: 0,
+        reviewCount: 0,
         fastDelivery: product.fastDelivery,
         assured: true,
         status: "ACTIVE",
@@ -94,8 +94,8 @@ async function main() {
         stock: 20,
         images: [product.image],
         category: product.category,
-        rating: product.rating,
-        reviewCount: product.reviews,
+        rating: 0,
+        reviewCount: 0,
         fastDelivery: product.fastDelivery,
         assured: true,
         status: "ACTIVE",
@@ -121,8 +121,34 @@ async function main() {
   for (const review of reviewRows) {
     await prisma.review.upsert({
       where: { id: review.id },
-      update: { rating: review.rating, comment: review.comment },
-      create: review,
+      update: { rating: review.rating, comment: review.comment, status: "HIDDEN" },
+      create: { ...review, status: "HIDDEN" },
+    });
+  }
+
+  // Keep demo seed reviews hidden and aggregates at 0 so they never reappear as live ratings.
+  for (const product of products) {
+    const visible = await prisma.review.aggregate({
+      where: { productId: product.id, status: "VISIBLE" },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    const reviewCount = visible._count._all;
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { reviewCount, rating: reviewCount > 0 ? Number(visible._avg.rating) : 0 },
+    });
+  }
+  for (const vendor of vendors) {
+    const visible = await prisma.review.aggregate({
+      where: { status: "VISIBLE", product: { vendorId: vendor.id } },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    const reviewCount = visible._count._all;
+    await prisma.vendor.update({
+      where: { id: vendor.id },
+      data: { rating: reviewCount > 0 ? Number(visible._avg.rating) : 0 },
     });
   }
 

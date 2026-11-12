@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { requireRole } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { expireUnpaidOrdersSafe } from "@/lib/inventory";
-import AdminClient, { type AdminOrder, type AdminPayment } from "./AdminClient";
+import AdminClient, { type AdminOrder, type AdminPayment, type AdminReview } from "./AdminClient";
 
 export default function AdminPage() {
   return (
@@ -15,7 +15,7 @@ export default function AdminPage() {
 async function AdminLoader() {
   await requireRole(["ADMIN"], "/admin");
   await expireUnpaidOrdersSafe();
-  const [paymentRows, orderRows] = await Promise.all([
+  const [paymentRows, orderRows, reviewRows] = await Promise.all([
     prisma.order.findMany({
       where: { paymentStatus: { in: ["PENDING", "SUBMITTED"] } },
       include: { user: { select: { email: true, name: true } } },
@@ -25,6 +25,14 @@ async function AdminLoader() {
       include: {
         user: { select: { email: true, name: true } },
         fulfillments: { include: { vendor: { select: { storeName: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+    prisma.review.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        product: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
       take: 200,
@@ -59,5 +67,16 @@ async function AdminLoader() {
       vendorName: f.vendor.storeName,
     })),
   }));
-  return <AdminClient payments={payments} orders={orders} />;
+  const reviews: AdminReview[] = reviewRows.map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    productId: row.product.id,
+    productName: row.product.name,
+    customerName: row.user.name,
+    customerEmail: row.user.email,
+  }));
+  return <AdminClient payments={payments} orders={orders} reviews={reviews} />;
 }
