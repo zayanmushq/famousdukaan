@@ -1,34 +1,60 @@
 "use client";
 
-export default function OrdersClient() {
-  const orders = [
-    { id: "AET-10248", date: "Nov 9", total: 4360, status: "Shipped", assured: true },
-    { id: "AET-10192", date: "Nov 5", total: 2480, status: "Delivered", assured: true },
-    { id: "AET-10087", date: "Oct 28", total: 890, status: "Delivered", assured: false },
-  ];
+import Link from "next/link";
+import { formatInr } from "@/lib/money";
+import { paymentLabel } from "@/lib/order-status";
 
+export type CustomerOrder = {
+  id: string;
+  orderNo: string;
+  total: number;
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+  upiTxnRef: string | null;
+};
+
+export default function OrdersClient({ orders }: { orders: CustomerOrder[] }) {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       <h1 className="text-3xl font-light tracking-tight mb-2">My Orders</h1>
       <p className="text-neutral-500 mb-10">Track and manage your purchases</p>
 
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div key={order.id} className="border border-neutral-200 rounded-xl p-5 flex justify-between items-center">
-            <div>
-              <div className="font-medium">{order.id}</div>
-              <div className="text-sm text-neutral-500">{order.date} · ₹{order.total.toLocaleString()}</div>
-            </div>
-            <div className="flex items-center gap-3">
-              {order.assured && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Assured</span>}
-              <span className={`text-sm ${order.status === "Delivered" ? "text-green-600" : "text-blue-600"}`}>
-                {order.status}
-              </span>
-              <a href="/track" className="text-sm underline">Track</a>
-            </div>
-          </div>
-        ))}
-      </div>
+      {orders.length === 0 ? (
+        <div className="border border-neutral-200 rounded-xl p-8 text-center">
+          <p className="text-neutral-600">You have no orders yet.</p>
+          <Link href="/products" className="inline-block mt-4 text-sm underline">
+            Start shopping
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => {
+            const needsPayment = order.paymentStatus === "PENDING" || order.paymentStatus === "REJECTED" || order.paymentStatus === "SUBMITTED";
+            const label = paymentLabel(order.paymentStatus, order.status);
+            return (
+              <div key={order.id} className="border border-neutral-200 rounded-xl p-5 flex justify-between items-center gap-4">
+                <div>
+                  <div className="font-medium">{order.orderNo}</div>
+                  <div className="text-sm text-neutral-500">
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })} · {formatInr(order.total)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className={`text-sm ${order.paymentStatus === "PAID" ? "text-green-600" : order.paymentStatus === "REJECTED" ? "text-red-600" : "text-blue-600"}`}>
+                    {label}
+                  </span>
+                  {needsPayment && (
+                    <Link href={`/checkout/pay/${order.id}`} className="text-sm underline">
+                      {order.paymentStatus === "SUBMITTED" ? "View payment" : "Pay"}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

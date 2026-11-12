@@ -39,6 +39,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const isAdminApi = pathname === "/api/admin" || pathname.startsWith("/api/admin/");
+  if (isAdminApi) {
+    if (!isLoggedIn) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
+
   const needsLogin = startsWithAny(pathname, [...customerPrefixes, ...vendorPrefixes, ...adminPrefixes]);
   if (needsLogin && !isLoggedIn) {
     const login = new URL("/login", request.url);
@@ -75,5 +86,7 @@ export const config = {
     "/api/orders/:path*",
     "/api/products",
     "/api/products/:path*",
+    "/api/admin",
+    "/api/admin/:path*",
   ],
 };

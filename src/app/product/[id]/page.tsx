@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { getProductById } from "@/lib/catalog";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -71,9 +72,7 @@ async function ProductDetails({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <button className="px-10 py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-full hover:bg-neutral-800 transition-colors">
-              Add to Cart · ${bestOffer.price}
-            </button>
+            <AddToCartButton productId={product.id} price={bestOffer.price} />
             <a
               href={`https://wa.me/?text=Check%20out%20${encodeURIComponent(product.name)}%20on%20Aether`}
               target="_blank"
